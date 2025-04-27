@@ -35,37 +35,49 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
     return new Intl.NumberFormat("en-US").format(mileage);
   };
 
+  // Use car.title or construct one if it doesn't exist
+  const title = car.title || `${car.make} ${car.model} ${car.year}`;
+
+  // Safely format the transmission if it exists
+  const formattedTransmission = car.transmission 
+    ? car.transmission.charAt(0).toUpperCase() + car.transmission.slice(1) 
+    : "N/A";
+
   return (
     <Card className="overflow-hidden hover-scale transition-all duration-300 shadow-md h-full flex flex-col">
       <div className="relative">
         <img
           src={car.image}
-          alt={car.title}
+          alt={title}
           className="w-full h-48 object-cover"
         />
-        <Badge
-          variant="default"
-          className={`absolute top-3 right-3 ${
-            car.condition === "Excellent"
-              ? "bg-green-600"
-              : car.condition === "Good"
-              ? "bg-blue-600"
-              : "bg-amber-600"
-          }`}
-        >
-          {car.condition}
-        </Badge>
-        <Badge
-          variant="outline"
-          className="absolute top-3 left-3 bg-white bg-opacity-80"
-        >
-          {car.sellerType === "dealer" ? "Dealer" : "Private Seller"}
-        </Badge>
+        {car.condition && (
+          <Badge
+            variant="default"
+            className={`absolute top-3 right-3 ${
+              car.condition === "Excellent"
+                ? "bg-green-600"
+                : car.condition === "Good"
+                ? "bg-blue-600"
+                : "bg-amber-600"
+            }`}
+          >
+            {car.condition}
+          </Badge>
+        )}
+        {car.sellerType && (
+          <Badge
+            variant="outline"
+            className="absolute top-3 left-3 bg-white bg-opacity-80"
+          >
+            {car.sellerType === "dealer" ? "Dealer" : "Private Seller"}
+          </Badge>
+        )}
       </div>
       
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-lg">{car.title}</h3>
+          <h3 className="font-bold text-lg">{title}</h3>
           <span className="text-lg font-semibold text-primary">
             {formatPrice(car.price)}
           </span>
@@ -80,16 +92,18 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
             <span className="font-medium">Mileage:</span>
             <span className="ml-1">{formatMileage(car.mileage)} mi</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="font-medium">Fuel:</span>
-            <span className="ml-1">{car.fuelType}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="font-medium">Transmission:</span>
-            <span className="ml-1">
-              {car.transmission.charAt(0).toUpperCase() + car.transmission.slice(1)}
-            </span>
-          </div>
+          {car.fuelType && (
+            <div className="flex items-center text-sm text-gray-600">
+              <span className="font-medium">Fuel:</span>
+              <span className="ml-1">{car.fuelType}</span>
+            </div>
+          )}
+          {car.transmission && (
+            <div className="flex items-center text-sm text-gray-600">
+              <span className="font-medium">Transmission:</span>
+              <span className="ml-1">{formattedTransmission}</span>
+            </div>
+          )}
         </div>
         
         <div className="mt-auto flex flex-col">

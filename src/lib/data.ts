@@ -1,4 +1,50 @@
-export const cars = [
+export interface CarType {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  color: string;
+  mileage: number;
+  price: number;
+  image: string;
+  description: string;
+  features: string[];
+  location: string;
+  seller: string;
+  rating: number;
+  reviewCount: number;
+  title?: string;
+  condition?: string;
+  fuelType?: string;
+  transmission?: string;
+  sellerType?: 'dealer' | 'private';
+}
+
+export interface ServiceType {
+  id: number;
+  name: string;
+  image: string;
+  description: string;
+  price: string;
+  provider: ServiceProviderType;
+  category: string;
+  duration: string;
+  rating: number;
+}
+
+export interface ServiceProviderType {
+  id: number;
+  name: string;
+  image: string;
+  location: string;
+  rating: number;
+  reviewCount: number;
+  specialties: string[];
+  description: string;
+  verified?: boolean;
+}
+
+export const cars: CarType[] = [
   {
     id: 1,
     make: "Toyota",
@@ -15,6 +61,11 @@ export const cars = [
     seller: "John Doe",
     rating: 4.5,
     reviewCount: 50,
+    title: "Toyota Camry 2021",
+    condition: "Excellent",
+    fuelType: "Gasoline",
+    transmission: "automatic",
+    sellerType: "dealer",
   },
   {
     id: 2,
@@ -31,6 +82,11 @@ export const cars = [
     seller: "Jane Smith",
     rating: 4.7,
     reviewCount: 75,
+    title: "Honda Civic 2022",
+    condition: "Excellent",
+    fuelType: "Gasoline",
+    transmission: "automatic",
+    sellerType: "private",
   },
   {
     id: 3,
@@ -47,6 +103,11 @@ export const cars = [
     seller: "Mike Johnson",
     rating: 4.3,
     reviewCount: 60,
+    title: "Ford F-150 2020",
+    condition: "Good",
+    fuelType: "Diesel",
+    transmission: "manual",
+    sellerType: "dealer",
   },
   {
     id: 4,
@@ -63,6 +124,11 @@ export const cars = [
     seller: "Emily Brown",
     rating: 4.9,
     reviewCount: 90,
+    title: "Tesla Model 3 2023",
+    condition: "Excellent",
+    fuelType: "Electric",
+    transmission: "automatic",
+    sellerType: "dealer",
   },
 ];
 
@@ -120,8 +186,7 @@ export const testimonials = [
   },
 ];
 
-// First, define serviceProviders before it's used
-export const serviceProviders = [
+export const serviceProviders: ServiceProviderType[] = [
   {
     id: 1,
     name: "Premium Auto Care",
@@ -132,6 +197,7 @@ export const serviceProviders = [
     specialties: ["Maintenance", "Repairs", "Diagnostics"],
     description:
       "Premium Auto Care offers comprehensive vehicle maintenance and repair services with certified mechanics and state-of-the-art equipment.",
+    verified: true,
   },
   {
     id: 2,
@@ -143,6 +209,7 @@ export const serviceProviders = [
     specialties: ["Performance Upgrades", "Custom Work", "Electrical Systems"],
     description:
       "Specializing in performance enhancements and custom automotive solutions, Elite Automotive provides expert service for enthusiasts and everyday drivers alike.",
+    verified: true,
   },
   {
     id: 3,
@@ -154,6 +221,7 @@ export const serviceProviders = [
     specialties: ["Engine Repair", "Transmission Service", "Brake Systems"],
     description:
       "Family-owned business with over 25 years of experience providing honest, reliable mechanical repairs at fair prices.",
+    verified: false,
   },
   {
     id: 4,
@@ -165,11 +233,11 @@ export const serviceProviders = [
     specialties: ["Pre-purchase Inspection", "Safety Checks", "Diagnostics"],
     description:
       "Our detailed inspection services help buyers make informed decisions and ensure vehicles are in top condition before purchase.",
+    verified: true,
   },
 ];
 
-// Define services using the serviceProviders that's now defined above
-export const services = [
+export const services: ServiceType[] = [
   {
     id: 1,
     name: "Vehicle Inspection",
