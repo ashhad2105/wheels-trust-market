@@ -28,7 +28,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
       <div className="relative">
         <img
           src={service.image}
-          alt={service.title}
+          alt={service.name}
           className="w-full h-48 object-cover"
         />
         <Badge
@@ -40,7 +40,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
       </div>
       
       <div className="p-5 flex flex-col flex-grow">
-        <h3 className="font-bold text-lg mb-2">{service.title}</h3>
+        <h3 className="font-bold text-lg mb-2">{service.name}</h3>
         <p className="text-gray-600 text-sm mb-4 flex-grow">
           {service.description}
         </p>

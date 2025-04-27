@@ -22,7 +22,7 @@ const ServiceGrid: React.FC<ServiceGridProps> = ({ services }) => {
   // Filter services based on selected filters
   const filteredServices = services.filter((service) => {
     const matchesSearch =
-      service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.provider.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
