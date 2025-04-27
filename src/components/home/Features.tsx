@@ -1,13 +1,12 @@
-
 import React from "react";
-import { Search, Info, Settings, Dashboard } from "lucide-react";
+import { Search, Info, Settings, LayoutDashboard } from "lucide-react";
 import { features } from "@/lib/data";
 
 const featureIcons = {
   search: <Search className="h-6 w-6" />,
   info: <Info className="h-6 w-6" />,
   settings: <Settings className="h-6 w-6" />,
-  dashboard: <Dashboard className="h-6 w-6" />,
+  dashboard: <LayoutDashboard className="h-6 w-6" />,
 };
 
 const Features = () => {

@@ -1,272 +1,217 @@
-
-// Dummy data for the application
-
-export type CarType = {
-  id: string;
-  title: string;
-  price: number;
-  year: number;
-  mileage: number;
-  location: string;
-  image: string;
-  condition: string;
-  features: string[];
-  sellerType: 'private' | 'dealer';
-  transmission: 'automatic' | 'manual';
-  fuelType: string;
-};
-
-export type ServiceType = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  price: string;
-  category: string;
-  provider: ServiceProviderType;
-  rating: number;
-};
-
-export type ServiceProviderType = {
-  id: string;
-  name: string;
-  rating: number;
-  description: string;
-  image: string;
-  location: string;
-  specialties: string[];
-  verified: boolean;
-};
-
-export type TestimonialType = {
-  id: string;
-  name: string;
-  role: string;
-  image: string;
-  content: string;
-  rating: number;
-};
-
-export type FeatureType = {
-  title: string;
-  description: string;
-  icon: string;
-};
-
-// Car listings data
-export const cars: CarType[] = [
+export const cars = [
   {
-    id: '1',
-    title: '2019 Toyota Camry XSE',
-    price: 25999,
-    year: 2019,
-    mileage: 35000,
-    location: 'San Francisco, CA',
-    image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=1964&auto=format&fit=crop',
-    condition: 'Excellent',
-    features: ['Leather Seats', 'Bluetooth', 'Backup Camera', 'Sunroof'],
-    sellerType: 'dealer',
-    transmission: 'automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '2',
-    title: '2018 Honda Civic Sport',
-    price: 19500,
-    year: 2018,
-    mileage: 42000,
-    location: 'Portland, OR',
-    image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop',
-    condition: 'Good',
-    features: ['Apple CarPlay', 'Android Auto', 'Alloy Wheels', 'Sport Mode'],
-    sellerType: 'private',
-    transmission: 'manual',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '3',
-    title: '2020 Tesla Model 3',
-    price: 42990,
-    year: 2020,
-    mileage: 28000,
-    location: 'Austin, TX',
-    image: 'https://images.unsplash.com/photo-1561580125-028ee3bd62eb?q=80&w=2070&auto=format&fit=crop',
-    condition: 'Excellent',
-    features: ['Autopilot', 'Premium Interior', 'Glass Roof', 'Long Range Battery'],
-    sellerType: 'dealer',
-    transmission: 'automatic',
-    fuelType: 'Electric',
-  },
-  {
-    id: '4',
-    title: '2017 Ford F-150 XLT',
-    price: 29750,
-    year: 2017,
-    mileage: 56000,
-    location: 'Denver, CO',
-    image: 'https://images.unsplash.com/photo-1605893477799-b99e3b8b93fe?q=80&w=2070&auto=format&fit=crop',
-    condition: 'Good',
-    features: ['4x4', 'Tow Package', 'Bed Liner', 'Navigation'],
-    sellerType: 'dealer',
-    transmission: 'automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '5',
-    title: '2021 Mazda CX-5 Touring',
-    price: 27800,
+    id: 1,
+    make: "Toyota",
+    model: "Camry",
     year: 2021,
+    color: "Silver",
+    mileage: 34000,
+    price: 24500,
+    image: "/placeholder.svg",
+    description:
+      "Reliable and fuel-efficient sedan, perfect for daily commutes.",
+    features: ["Automatic", "Bluetooth", "Backup Camera"],
+    location: "New York, NY",
+    seller: "John Doe",
+    rating: 4.5,
+    reviewCount: 50,
+  },
+  {
+    id: 2,
+    make: "Honda",
+    model: "Civic",
+    year: 2022,
+    color: "Blue",
     mileage: 22000,
-    location: 'Chicago, IL',
-    image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=1964&auto=format&fit=crop',
-    condition: 'Excellent',
-    features: ['AWD', 'Heated Seats', 'Lane Assist', 'Bose Sound System'],
-    sellerType: 'dealer',
-    transmission: 'automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '6',
-    title: '2019 Subaru Outback Limited',
-    price: 24990,
-    year: 2019,
-    mileage: 38500,
-    location: 'Seattle, WA',
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2070&auto=format&fit=crop',
-    condition: 'Good',
-    features: ['AWD', 'Leather Interior', 'Eyesight System', 'Roof Rails'],
-    sellerType: 'private',
-    transmission: 'automatic',
-    fuelType: 'Gasoline',
-  },
-];
-
-// Service data
-export const services: ServiceType[] = [
-  {
-    id: '1',
-    title: 'Standard Oil Change',
-    description: 'Full synthetic oil change with filter replacement and multi-point inspection',
-    image: 'https://images.unsplash.com/photo-1630294723485-c69b1e6b2d6c?q=80&w=2070&auto=format&fit=crop',
-    price: '$49.99 - $89.99',
-    category: 'maintenance',
-    provider: serviceProviders[0],
-    rating: 4.8,
-  },
-  {
-    id: '2',
-    title: 'Brake Pad Replacement',
-    description: 'Front or rear brake pad replacement with rotor inspection',
-    image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=2041&auto=format&fit=crop',
-    price: '$180 - $350',
-    category: 'repair',
-    provider: serviceProviders[1],
+    price: 22000,
+    image: "/placeholder.svg",
+    description: "Compact and sporty, great for city driving.",
+    features: ["Sunroof", "Alloy Wheels", "Apple CarPlay"],
+    location: "Los Angeles, CA",
+    seller: "Jane Smith",
     rating: 4.7,
+    reviewCount: 75,
   },
   {
-    id: '3',
-    title: 'Full Vehicle Inspection',
-    description: 'Comprehensive 50-point inspection including all major systems',
-    image: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?q=80&w=1964&auto=format&fit=crop',
-    price: '$120 - $180',
-    category: 'inspection',
-    provider: serviceProviders[2],
+    id: 3,
+    make: "Ford",
+    model: "F-150",
+    year: 2020,
+    color: "White",
+    mileage: 45000,
+    price: 32000,
+    image: "/placeholder.svg",
+    description: "Powerful and versatile truck, ready for any job.",
+    features: ["4x4", "Towing Package", "Crew Cab"],
+    location: "Chicago, IL",
+    seller: "Mike Johnson",
+    rating: 4.3,
+    reviewCount: 60,
+  },
+  {
+    id: 4,
+    make: "Tesla",
+    model: "Model 3",
+    year: 2023,
+    color: "Red",
+    mileage: 15000,
+    price: 45000,
+    image: "/placeholder.svg",
+    description: "Electric and eco-friendly, with advanced technology.",
+    features: ["Autopilot", "Premium Interior", "Long Range"],
+    location: "Houston, TX",
+    seller: "Emily Brown",
     rating: 4.9,
-  },
-  {
-    id: '4',
-    title: 'Tire Rotation & Balance',
-    description: 'Rotation and balancing of all four tires with pressure check',
-    image: 'https://images.unsplash.com/photo-1625047509248-ec889cbff17f?q=80&w=1932&auto=format&fit=crop',
-    price: '$60 - $100',
-    category: 'maintenance',
-    provider: serviceProviders[0],
-    rating: 4.6,
+    reviewCount: 90,
   },
 ];
 
-// Service providers data
-export const serviceProviders: ServiceProviderType[] = [
+export const features = [
   {
-    id: '1',
-    name: 'AutoCare Express',
-    rating: 4.8,
-    description: 'Professional automotive service center with certified mechanics',
-    image: 'https://images.unsplash.com/photo-1599256621730-535171e28b8e?q=80&w=1932&auto=format&fit=crop',
-    location: 'Multiple locations',
-    specialties: ['Maintenance', 'Oil Changes', 'Tires', 'Brakes'],
-    verified: true,
+    title: "Extensive Vehicle Database",
+    description:
+      "Browse through thousands of listings with detailed information and verified history reports.",
+    icon: "search",
   },
   {
-    id: '2',
-    name: 'Precision Auto Repair',
-    rating: 4.7,
-    description: 'Family-owned repair shop specializing in domestic and foreign vehicles',
-    image: 'https://images.unsplash.com/photo-1599256621730-535171e28b8e?q=80&w=1932&auto=format&fit=crop',
-    location: 'Seattle, WA',
-    specialties: ['Engine Repair', 'Transmission', 'Electrical Systems'],
-    verified: true,
+    title: "Transparent Seller Information",
+    description:
+      "View seller ratings, reviews, and transaction history for confident buying and selling.",
+    icon: "info",
   },
   {
-    id: '3',
-    name: 'Elite Automotive Services',
-    rating: 4.9,
-    description: 'Luxury vehicle specialists with dealer-level diagnostic equipment',
-    image: 'https://images.unsplash.com/photo-1599256621730-535171e28b8e?q=80&w=1932&auto=format&fit=crop',
-    location: 'Los Angeles, CA',
-    specialties: ['Luxury Vehicles', 'Performance Tuning', 'Diagnostics'],
-    verified: true,
+    title: "Advanced Search Filters",
+    description:
+      "Narrow down your options with precise search filters for make, model, year, price, and more.",
+    icon: "settings",
+  },
+  {
+    title: "User-Friendly Dashboard",
+    description:
+      "Manage your listings, track your favorite vehicles, and communicate with sellers in one central location.",
+    icon: "dashboard",
   },
 ];
 
-// Testimonial data
-export const testimonials: TestimonialType[] = [
+export const testimonials = [
   {
-    id: '1',
-    name: 'Sarah Johnson',
-    role: 'Car Owner',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1974&auto=format&fit=crop',
-    content: 'I sold my Toyota through WheelsTrust in less than a week! The process was incredibly smooth, and I got a fair price without the usual hassle.',
+    name: "Alice Johnson",
+    title: "Happy Car Buyer",
+    quote:
+      "I found my dream car on WheelsTrust! The transparent seller information and detailed vehicle history gave me the confidence to make a great purchase.",
+    image: "/placeholder.svg",
     rating: 5,
   },
   {
-    id: '2',
-    name: 'Michael Chen',
-    role: 'Car Buyer',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop',
-    content: 'Finding my dream car was so easy with the detailed listings and transparent pricing. I felt confident in my purchase knowing the vehicle had been verified.',
+    name: "Bob Williams",
+    title: "Satisfied Seller",
+    quote:
+      "Selling my car on WheelsTrust was a breeze. The platform is user-friendly, and I quickly found a buyer at a fair price.",
+    image: "/placeholder.svg",
     rating: 4,
   },
   {
-    id: '3',
-    name: 'Jessica Rodriguez',
-    role: 'Service Provider',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop',
-    content: 'As a service provider, the platform has helped my business grow by connecting us with new customers who trust our transparent pricing and service quality.',
+    name: "Charlie Brown",
+    title: "First Time Car Owner",
+    quote:
+      "As a first-time car owner, I was nervous about the buying process. WheelsTrust provided all the information and support I needed to make an informed decision.",
+    image: "/placeholder.svg",
     rating: 5,
   },
 ];
 
-// Features data
-export const features: FeatureType[] = [
+// First, define serviceProviders before it's used
+export const serviceProviders = [
   {
-    title: 'Verified Listings',
-    description: 'All vehicles undergo a thorough inspection process to ensure accuracy and quality',
-    icon: 'search',
+    id: 1,
+    name: "Premium Auto Care",
+    image: "/placeholder.svg",
+    location: "New York, NY",
+    rating: 4.9,
+    reviewCount: 120,
+    specialties: ["Maintenance", "Repairs", "Diagnostics"],
+    description:
+      "Premium Auto Care offers comprehensive vehicle maintenance and repair services with certified mechanics and state-of-the-art equipment.",
   },
   {
-    title: 'Transparent Pricing',
-    description: 'Compare market prices and get fair deals with our pricing transparency tools',
-    icon: 'info',
+    id: 2,
+    name: "Elite Automotive Solutions",
+    image: "/placeholder.svg",
+    location: "Los Angeles, CA",
+    rating: 4.8,
+    reviewCount: 95,
+    specialties: ["Performance Upgrades", "Custom Work", "Electrical Systems"],
+    description:
+      "Specializing in performance enhancements and custom automotive solutions, Elite Automotive provides expert service for enthusiasts and everyday drivers alike.",
   },
   {
-    title: 'Trusted Service Network',
-    description: 'Connect with vetted service providers rated by our community of car owners',
-    icon: 'settings',
+    id: 3,
+    name: "Trusty Mechanics",
+    image: "/placeholder.svg",
+    location: "Chicago, IL",
+    rating: 4.7,
+    reviewCount: 88,
+    specialties: ["Engine Repair", "Transmission Service", "Brake Systems"],
+    description:
+      "Family-owned business with over 25 years of experience providing honest, reliable mechanical repairs at fair prices.",
   },
   {
-    title: 'Secure Transactions',
-    description: 'Our secure platform ensures safe transactions between buyers and sellers',
-    icon: 'dashboard',
+    id: 4,
+    name: "Precision Auto Inspection",
+    image: "/placeholder.svg",
+    location: "Houston, TX",
+    rating: 4.9,
+    reviewCount: 105,
+    specialties: ["Pre-purchase Inspection", "Safety Checks", "Diagnostics"],
+    description:
+      "Our detailed inspection services help buyers make informed decisions and ensure vehicles are in top condition before purchase.",
+  },
+];
+
+// Define services using the serviceProviders that's now defined above
+export const services = [
+  {
+    id: 1,
+    name: "Vehicle Inspection",
+    image: "/placeholder.svg",
+    description: "Comprehensive pre-purchase inspection with detailed report",
+    price: "$149",
+    provider: serviceProviders[3],
+    category: "Inspection",
+    duration: "2 hours",
+    rating: 4.9,
+  },
+  {
+    id: 2,
+    name: "Regular Maintenance",
+    image: "/placeholder.svg",
+    description: "Oil change, filter replacement, and safety check",
+    price: "$89",
+    provider: serviceProviders[0],
+    category: "Maintenance",
+    duration: "1 hour",
+    rating: 4.8,
+  },
+  {
+    id: 3,
+    name: "Performance Tuning",
+    image: "/placeholder.svg",
+    description: "Engine tuning and performance optimization",
+    price: "$299",
+    provider: serviceProviders[1],
+    category: "Performance",
+    duration: "3 hours",
+    rating: 4.7,
+  },
+  {
+    id: 4,
+    name: "Brake System Service",
+    image: "/placeholder.svg",
+    description: "Complete brake inspection and pad replacement",
+    price: "$189",
+    provider: serviceProviders[2],
+    category: "Repair",
+    duration: "2 hours",
+    rating: 4.8,
   },
 ];
