@@ -12,18 +12,25 @@ import { Calendar, MapPin, Clock, Phone, Mail, Star, MessageSquare } from "lucid
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+// Define the ServiceProviderType structure
+interface ServiceProviderType {
+  id: string;
+  name: string;
+  image: string;
+  verified: boolean;
+  location: string;
+  rating: number;
+  reviewCount: number;
+  specialties: string[];
+  description: string;
+}
+
 // Extended service type to include the properties we need
-interface ExtendedServiceType extends ServiceType {
+interface ExtendedServiceType extends Omit<ServiceType, 'provider'> {
   description: string;
   price: string;
   rating: number;
-  provider: {
-    id: string;
-    name: string;
-    image: string;
-    verified: boolean;
-    location: string;
-  };
+  provider: ServiceProviderType;
   images: string[];
 }
 
@@ -41,7 +48,11 @@ const mockService: ExtendedServiceType = {
     name: "Auto Spa Services",
     image: "https://images.unsplash.com/photo-1566753323558-f4e0952af115?auto=format&fit=crop&w=100&h=100",
     verified: true,
-    location: "Los Angeles, CA"
+    location: "Los Angeles, CA",
+    rating: 4.9,
+    reviewCount: 42,
+    specialties: ["Detailing", "Washing", "Polishing"],
+    description: "Premium auto detailing services for luxury and everyday vehicles."
   },
   images: [
     "https://images.unsplash.com/photo-1605152276897-4f618f831968?auto=format&fit=crop&w=800&h=600",
@@ -156,7 +167,7 @@ const ServiceDetails = () => {
                     </div>
                     <span className="ml-2 text-sm text-gray-600">{service.rating} rating</span>
                     <span className="mx-2 text-gray-300">•</span>
-                    <span className="text-sm text-gray-600">42 reviews</span>
+                    <span className="text-sm text-gray-600">{service.provider.reviewCount} reviews</span>
                   </div>
                   
                   <p className="text-gray-700 mb-6">
