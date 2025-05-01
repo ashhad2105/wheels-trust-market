@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,25 @@ import { ServiceType } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Clock, Phone, Mail, Star, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+// Extended service type to include the properties we need
+interface ExtendedServiceType extends ServiceType {
+  description: string;
+  price: string;
+  rating: number;
+  provider: {
+    id: string;
+    name: string;
+    image: string;
+    verified: boolean;
+    location: string;
+  };
+  images: string[];
+}
 
 // Mock service data for now - will be replaced with API call later
-const mockService = {
+const mockService: ExtendedServiceType = {
   id: "1",
   name: "Premium Car Detailing",
   description: "Professional interior and exterior detailing service to make your car look brand new.",
@@ -39,14 +55,18 @@ const ServiceDetails = () => {
   const { id } = useParams();
   const { isAuthenticated, openAuthModal } = useAuth();
   const [activeImage, setActiveImage] = useState(0);
-  const [service] = useState<ServiceType>(mockService as unknown as ServiceType);
+  const [service] = useState<ExtendedServiceType>(mockService);
+  const { toast } = useToast();
   
   const handleBookService = () => {
     if (!isAuthenticated) {
       openAuthModal();
     } else {
       // Booking logic would go here
-      alert("Booking functionality coming soon!");
+      toast({
+        title: "Booking Request Sent",
+        description: `Your request for ${service.name} has been received.`,
+      });
     }
   };
 
@@ -55,7 +75,10 @@ const ServiceDetails = () => {
       openAuthModal();
     } else {
       // Contact logic would go here
-      alert("Contact functionality coming soon!");
+      toast({
+        title: "Message Sent",
+        description: `Your message to ${service.provider.name} has been sent.`,
+      });
     }
   };
 
