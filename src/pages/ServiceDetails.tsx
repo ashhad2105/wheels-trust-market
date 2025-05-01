@@ -8,28 +8,28 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { cars } from "@/lib/data";
-import { Car, Calendar, MapPin, Info, MessageSquare } from "lucide-react";
+import { services } from "@/lib/data";
+import { Calendar, MapPin, Clock, Phone, MessageSquare, Star } from "lucide-react";
 import Modal from "@/components/ui/modal";
 
-const CarDetails = () => {
+const ServiceDetails = () => {
   const { id } = useParams();
   const { isAuthenticated, openAuthModal } = useAuth();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   
-  // Find the car with the matching ID
-  const car = cars.find(c => c.id === id);
+  // Find the service with the matching ID
+  const service = services.find(s => s.id === id);
   
-  if (!car) {
+  if (!service) {
     return (
       <>
         <Navbar />
         <div className="container mx-auto px-4 pt-32 pb-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Car Not Found</h1>
-          <p className="mb-6">The car you're looking for doesn't exist or has been removed.</p>
-          <Link to="/cars/buy">
-            <Button>Browse All Cars</Button>
+          <h1 className="text-3xl font-bold mb-4">Service Not Found</h1>
+          <p className="mb-6">The service you're looking for doesn't exist or has been removed.</p>
+          <Link to="/services">
+            <Button>Browse All Services</Button>
           </Link>
         </div>
         <Footer />
@@ -37,18 +37,6 @@ const CarDetails = () => {
     );
   }
   
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-  
-  const formatMileage = (mileage: number) => {
-    return new Intl.NumberFormat("en-US").format(mileage);
-  };
-
   const handleContactClick = () => {
     if (!isAuthenticated) {
       openAuthModal();
@@ -59,24 +47,23 @@ const CarDetails = () => {
   
   const handleSubmitMessage = () => {
     // In a real app, this would send the message to the backend
-    alert("Your message has been sent to the seller!");
+    alert("Your inquiry has been sent!");
     setMessage("");
     setIsContactModalOpen(false);
   };
   
-  const carImages = [
-    car.image,
-    "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop",
+  const serviceImages = [
+    service.image,
+    "https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?w=800&auto=format&fit=crop",
   ];
   
-  const [activeImage, setActiveImage] = useState(carImages[0]);
+  const [activeImage, setActiveImage] = useState(serviceImages[0]);
 
   return (
     <>
       <Helmet>
-        <title>{car.title || `${car.year} ${car.make} ${car.model}`} | WheelsTrust</title>
+        <title>{service.title} | WheelsTrust</title>
       </Helmet>
       
       <Navbar />
@@ -85,26 +72,26 @@ const CarDetails = () => {
         <div className="container mx-auto px-4">
           <div className="mb-6">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Link to="/cars/buy" className="text-sm text-gray-500 hover:text-primary">
-                Cars
+              <Link to="/services" className="text-sm text-gray-500 hover:text-primary">
+                Services
               </Link>
               <span className="text-gray-400">/</span>
-              <Link to="/cars/buy" className="text-sm text-gray-500 hover:text-primary">
-                {car.make}
+              <Link to="/services" className="text-sm text-gray-500 hover:text-primary">
+                {service.category}
               </Link>
               <span className="text-gray-400">/</span>
               <span className="text-sm text-gray-500">
-                {car.model}
+                {service.title}
               </span>
             </div>
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h1 className="text-3xl font-bold">
-                {car.title || `${car.year} ${car.make} ${car.model}`}
+                {service.title}
               </h1>
-              <div className="text-xl md:text-2xl font-semibold text-primary">
-                {formatPrice(car.price)}
-              </div>
+              <Badge variant="outline" className="text-sm">
+                {service.category}
+              </Badge>
             </div>
           </div>
           
@@ -114,29 +101,14 @@ const CarDetails = () => {
                 <div className="relative h-64 md:h-96 overflow-hidden">
                   <img 
                     src={activeImage} 
-                    alt={car.title || `${car.year} ${car.make} ${car.model}`}
+                    alt={service.title}
                     className="w-full h-full object-cover"
                   />
-                  
-                  {car.condition && (
-                    <Badge
-                      variant="default"
-                      className={`absolute top-4 right-4 ${
-                        car.condition === "Excellent"
-                          ? "bg-green-600"
-                          : car.condition === "Good"
-                          ? "bg-blue-600"
-                          : "bg-amber-600"
-                      }`}
-                    >
-                      {car.condition} Condition
-                    </Badge>
-                  )}
                 </div>
                 
                 <div className="p-4">
-                  <div className="grid grid-cols-4 gap-2">
-                    {carImages.map((img, idx) => (
+                  <div className="grid grid-cols-3 gap-2">
+                    {serviceImages.map((img, idx) => (
                       <div 
                         key={idx}
                         className={`cursor-pointer border-2 rounded overflow-hidden ${
@@ -146,7 +118,7 @@ const CarDetails = () => {
                       >
                         <img 
                           src={img} 
-                          alt={`Car view ${idx + 1}`} 
+                          alt={`Service view ${idx + 1}`} 
                           className="w-full h-16 object-cover"
                         />
                       </div>
@@ -159,175 +131,152 @@ const CarDetails = () => {
                 <Tabs defaultValue="overview">
                   <TabsList className="mb-6">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="features">Features</TabsTrigger>
-                    <TabsTrigger value="history">History</TabsTrigger>
+                    <TabsTrigger value="details">Details</TabsTrigger>
+                    <TabsTrigger value="reviews">Reviews</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="overview" className="space-y-6">
                     <div>
                       <h3 className="text-lg font-medium mb-3">Description</h3>
                       <p className="text-gray-700">
-                        This {car.year} {car.make} {car.model} is in {car.condition?.toLowerCase() || 'good'} condition with {formatMileage(car.mileage)} miles.
-                        It features a {car.transmission} transmission and {car.fuelType} engine.
-                        The car has been well maintained and is ready for its next owner.
+                        {service.description || "This service provides professional automotive care with attention to detail and quality workmanship. Our certified technicians use state-of-the-art equipment to ensure your vehicle receives the best possible service."}
                       </p>
                     </div>
                     
                     <div>
-                      <h3 className="text-lg font-medium mb-3">Specifications</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Year</div>
-                          <div className="font-medium">{car.year}</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Make</div>
-                          <div className="font-medium">{car.make}</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Model</div>
-                          <div className="font-medium">{car.model}</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Mileage</div>
-                          <div className="font-medium">{formatMileage(car.mileage)} mi</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Fuel Type</div>
-                          <div className="font-medium">{car.fuelType}</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Transmission</div>
-                          <div className="font-medium">
-                            {car.transmission?.charAt(0).toUpperCase() + car.transmission?.slice(1) || "N/A"}
+                      <h3 className="text-lg font-medium mb-3">Service Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-3 rounded flex items-center">
+                          <Clock className="h-5 w-5 text-gray-500 mr-3" />
+                          <div>
+                            <div className="text-xs text-gray-500">Duration</div>
+                            <div className="font-medium">1-2 hours</div>
                           </div>
                         </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Body Type</div>
-                          <div className="font-medium">Sedan</div>
+                        <div className="bg-gray-50 p-3 rounded flex items-center">
+                          <MapPin className="h-5 w-5 text-gray-500 mr-3" />
+                          <div>
+                            <div className="text-xs text-gray-500">Location</div>
+                            <div className="font-medium">{service.location || "Multiple Locations"}</div>
+                          </div>
                         </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Exterior Color</div>
-                          <div className="font-medium">Blue</div>
+                        <div className="bg-gray-50 p-3 rounded flex items-center">
+                          <Calendar className="h-5 w-5 text-gray-500 mr-3" />
+                          <div>
+                            <div className="text-xs text-gray-500">Availability</div>
+                            <div className="font-medium">Mon-Sat, 8AM-6PM</div>
+                          </div>
                         </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <div className="text-xs text-gray-500">Interior Color</div>
-                          <div className="font-medium">Black</div>
+                        <div className="bg-gray-50 p-3 rounded flex items-center">
+                          <Star className="h-5 w-5 text-yellow-500 mr-3" />
+                          <div>
+                            <div className="text-xs text-gray-500">Rating</div>
+                            <div className="font-medium">{service.rating || "4.8"} (24 reviews)</div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
                   
-                  <TabsContent value="features">
+                  <TabsContent value="details">
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium mb-3">Vehicle Features</h3>
+                      <h3 className="text-lg font-medium mb-3">Service Features</h3>
                       
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div className="flex items-center">
                           <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                           </svg>
-                          <span>Bluetooth</span>
+                          <span>Certified Technicians</span>
                         </div>
                         <div className="flex items-center">
                           <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                           </svg>
-                          <span>Backup Camera</span>
+                          <span>Quality Parts & Materials</span>
                         </div>
                         <div className="flex items-center">
                           <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                           </svg>
-                          <span>Navigation System</span>
+                          <span>Warranty Included</span>
                         </div>
                         <div className="flex items-center">
                           <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                           </svg>
-                          <span>Heated Seats</span>
+                          <span>Digital Reporting</span>
                         </div>
                         <div className="flex items-center">
                           <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                           </svg>
-                          <span>Sunroof</span>
+                          <span>Free Follow-up</span>
                         </div>
                         <div className="flex items-center">
                           <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                           </svg>
-                          <span>Lane Departure Warning</span>
-                        </div>
-                        <div className="flex items-center">
-                          <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                          </svg>
-                          <span>Apple CarPlay</span>
-                        </div>
-                        <div className="flex items-center">
-                          <svg className="h-4 w-4 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                          </svg>
-                          <span>Android Auto</span>
+                          <span>Mobile Service Available</span>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
                   
-                  <TabsContent value="history">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium mb-3">Vehicle History</h3>
+                  <TabsContent value="reviews">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-medium mb-3">Customer Reviews</h3>
                       
                       <div className="space-y-4">
-                        <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-start">
-                          <div className="mr-3 bg-green-100 rounded-full p-1">
-                            <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-medium">Clean Title</h4>
-                            <p className="text-sm text-gray-600">This vehicle has a clean title history with no reported accidents or damage.</p>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4 flex items-start">
-                          <div className="mr-3 bg-blue-100 rounded-full p-1">
-                            <Info className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">Service Records</h4>
-                            <p className="text-sm text-gray-600">Complete maintenance history available. All scheduled services performed at authorized dealers.</p>
-                          </div>
-                        </div>
-                        
-                        <div className="border border-gray-200 rounded-md">
-                          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                            <h4 className="font-medium">Owner History</h4>
-                          </div>
-                          <div className="p-4">
-                            <div className="flex items-center mb-4">
-                              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white mr-3">
-                                1
+                        <div className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden mr-3">
+                                <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&auto=format&fit=crop" alt="Customer" className="w-full h-full object-cover" />
                               </div>
                               <div>
-                                <div className="font-medium">First Owner</div>
-                                <div className="text-sm text-gray-600">2018-2021 • Personal Use</div>
+                                <div className="font-medium">Michael Johnson</div>
+                                <div className="text-xs text-gray-500">2 months ago</div>
                               </div>
                             </div>
                             <div className="flex items-center">
-                              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 mr-3">
-                                2
-                              </div>
-                              <div>
-                                <div className="font-medium">Current Seller</div>
-                                <div className="text-sm text-gray-600">2021-Present • Personal Use</div>
-                              </div>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              ))}
                             </div>
                           </div>
+                          <p className="text-sm text-gray-700">
+                            Great service! My car was serviced quickly and professionally. The technicians explained everything they did and even showed me the worn parts they replaced. Highly recommend!
+                          </p>
+                        </div>
+                        
+                        <div className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden mr-3">
+                                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop" alt="Customer" className="w-full h-full object-cover" />
+                              </div>
+                              <div>
+                                <div className="font-medium">Sarah Williams</div>
+                                <div className="text-xs text-gray-500">1 month ago</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              {[1, 2, 3, 4].map((star) => (
+                                <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                              <Star className="h-4 w-4 text-gray-300" />
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            Very satisfied with the brake service I received. Fair pricing and completed on time as promised. The only reason for 4 stars instead of 5 is that the waiting area could use some updating.
+                          </p>
                         </div>
                       </div>
+                      
+                      <Button variant="outline" className="w-full">
+                        Load More Reviews
+                      </Button>
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -336,20 +285,20 @@ const CarDetails = () => {
             
             <div className="md:col-span-1">
               <div className="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-24">
-                <h3 className="text-lg font-bold mb-4">Seller Information</h3>
+                <h3 className="text-lg font-bold mb-4">Service Provider</h3>
                 
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 overflow-hidden">
                     <img 
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop"
-                      alt="Seller" 
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop"
+                      alt="Provider" 
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
-                    <div className="font-medium">John Smith</div>
+                    <div className="font-medium">Auto Experts Ltd.</div>
                     <div className="text-sm text-gray-600">
-                      {car.sellerType === 'dealer' ? 'Dealer' : 'Private Seller'}
+                      Certified Service Provider
                     </div>
                   </div>
                 </div>
@@ -357,16 +306,29 @@ const CarDetails = () => {
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center text-sm">
                     <MapPin className="h-4 w-4 text-gray-500 mr-2" />
-                    <span>{car.location}</span>
+                    <span>{service.location || "Multiple Locations"}</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <Calendar className="h-4 w-4 text-gray-500 mr-2" />
-                    <span>Listed 2 weeks ago</span>
+                    <Phone className="h-4 w-4 text-gray-500 mr-2" />
+                    <span>(555) 123-4567</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <Info className="h-4 w-4 text-gray-500 mr-2" />
-                    <span>ID: {car.id}</span>
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <span className="text-gray-500 ml-1">5.0 (42 reviews)</span>
                   </div>
+                </div>
+                
+                <div className="border-t border-gray-200 pt-4 mb-6">
+                  <div className="text-lg font-bold mb-1">
+                    Starting from {service.price ? `$${service.price}` : "Varies"}
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Final price may vary based on vehicle model and condition
+                  </p>
                 </div>
                 
                 <div className="space-y-3">
@@ -375,30 +337,26 @@ const CarDetails = () => {
                     onClick={handleContactClick}
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
-                    Contact Seller
+                    Contact Provider
                   </Button>
                   
                   <Button variant="outline" className="w-full">
-                    Save to Favorites
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full">
-                    Schedule Test Drive
+                    Book Appointment
                   </Button>
                 </div>
               </div>
               
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Buyer Protection</h4>
+                <h4 className="font-medium mb-2">Our Guarantee</h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  All transactions on WheelsTrust are protected by our buyer guarantee.
+                  All services booked through WheelsTrust are backed by our service guarantee.
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center text-xs">
                     <svg className="h-4 w-4 text-primary mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span>Verified Sellers</span>
+                    <span>Verified Service Providers</span>
                   </div>
                   <div className="flex items-center text-xs">
                     <svg className="h-4 w-4 text-primary mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -410,7 +368,7 @@ const CarDetails = () => {
                     <svg className="h-4 w-4 text-primary mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span>Vehicle History Reports</span>
+                    <span>Satisfaction Guarantee</span>
                   </div>
                 </div>
               </div>
@@ -425,26 +383,26 @@ const CarDetails = () => {
       <Modal 
         isOpen={isContactModalOpen} 
         onClose={() => setIsContactModalOpen(false)} 
-        title="Contact Seller"
+        title="Contact Service Provider"
       >
         <div className="space-y-4">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop"
-                alt="Seller" 
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop"
+                alt="Provider" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <div className="font-medium">John Smith</div>
-              <div className="text-xs text-gray-600">Usually responds within 1 day</div>
+              <div className="font-medium">Auto Experts Ltd.</div>
+              <div className="text-xs text-gray-600">Usually responds within 1 hour</div>
             </div>
           </div>
           
           <div className="p-3 bg-gray-50 rounded-md">
             <span className="text-sm">
-              Regarding: <strong>{car.year} {car.make} {car.model}</strong>
+              Regarding: <strong>{service.title}</strong>
             </span>
           </div>
           
@@ -453,7 +411,7 @@ const CarDetails = () => {
             <textarea 
               id="message"
               className="w-full border border-gray-300 rounded-md p-3 min-h-[120px] focus:ring-primary focus:border-primary"
-              placeholder="Hi, I'm interested in your car. Is it still available?"
+              placeholder="Hi, I'm interested in your service. Do you have any availability next week?"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
@@ -480,4 +438,4 @@ const CarDetails = () => {
   );
 };
 
-export default CarDetails;
+export default ServiceDetails;
