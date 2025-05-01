@@ -18,8 +18,8 @@ const CarDetails = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   
-  // Find the car with the matching ID
-  const car = cars.find(c => c.id === id);
+  // Find the car with the matching ID - convert string id to number for comparison
+  const car = cars.find(c => c.id === parseInt(id as string));
   
   if (!car) {
     return (

@@ -18,8 +18,8 @@ const ServiceDetails = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   
-  // Find the service with the matching ID
-  const service = services.find(s => s.id === id);
+  // Find the service with the matching ID - convert string id to number for comparison
+  const service = services.find(s => s.id === parseInt(id as string));
   
   if (!service) {
     return (
@@ -63,7 +63,7 @@ const ServiceDetails = () => {
   return (
     <>
       <Helmet>
-        <title>{service.title} | WheelsTrust</title>
+        <title>{service.name} | WheelsTrust</title>
       </Helmet>
       
       <Navbar />
@@ -81,13 +81,13 @@ const ServiceDetails = () => {
               </Link>
               <span className="text-gray-400">/</span>
               <span className="text-sm text-gray-500">
-                {service.title}
+                {service.name}
               </span>
             </div>
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h1 className="text-3xl font-bold">
-                {service.title}
+                {service.name}
               </h1>
               <Badge variant="outline" className="text-sm">
                 {service.category}
@@ -101,7 +101,7 @@ const ServiceDetails = () => {
                 <div className="relative h-64 md:h-96 overflow-hidden">
                   <img 
                     src={activeImage} 
-                    alt={service.title}
+                    alt={service.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -150,14 +150,14 @@ const ServiceDetails = () => {
                           <Clock className="h-5 w-5 text-gray-500 mr-3" />
                           <div>
                             <div className="text-xs text-gray-500">Duration</div>
-                            <div className="font-medium">1-2 hours</div>
+                            <div className="font-medium">{service.duration}</div>
                           </div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded flex items-center">
                           <MapPin className="h-5 w-5 text-gray-500 mr-3" />
                           <div>
                             <div className="text-xs text-gray-500">Location</div>
-                            <div className="font-medium">{service.location || "Multiple Locations"}</div>
+                            <div className="font-medium">{service.provider.location}</div>
                           </div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded flex items-center">
@@ -171,7 +171,7 @@ const ServiceDetails = () => {
                           <Star className="h-5 w-5 text-yellow-500 mr-3" />
                           <div>
                             <div className="text-xs text-gray-500">Rating</div>
-                            <div className="font-medium">{service.rating || "4.8"} (24 reviews)</div>
+                            <div className="font-medium">{service.rating} (24 reviews)</div>
                           </div>
                         </div>
                       </div>
@@ -290,13 +290,13 @@ const ServiceDetails = () => {
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 overflow-hidden">
                     <img 
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop"
+                      src={service.provider.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop"}
                       alt="Provider" 
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
-                    <div className="font-medium">Auto Experts Ltd.</div>
+                    <div className="font-medium">{service.provider.name}</div>
                     <div className="text-sm text-gray-600">
                       Certified Service Provider
                     </div>
@@ -306,7 +306,7 @@ const ServiceDetails = () => {
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center text-sm">
                     <MapPin className="h-4 w-4 text-gray-500 mr-2" />
-                    <span>{service.location || "Multiple Locations"}</span>
+                    <span>{service.provider.location}</span>
                   </div>
                   <div className="flex items-center text-sm">
                     <Phone className="h-4 w-4 text-gray-500 mr-2" />
@@ -324,7 +324,7 @@ const ServiceDetails = () => {
                 
                 <div className="border-t border-gray-200 pt-4 mb-6">
                   <div className="text-lg font-bold mb-1">
-                    Starting from {service.price ? `$${service.price}` : "Varies"}
+                    Starting from {service.price}
                   </div>
                   <p className="text-sm text-gray-500 mb-4">
                     Final price may vary based on vehicle model and condition
@@ -389,20 +389,20 @@ const ServiceDetails = () => {
           <div className="flex items-center">
             <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop"
+                src={service.provider.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop"}
                 alt="Provider" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <div className="font-medium">Auto Experts Ltd.</div>
+              <div className="font-medium">{service.provider.name}</div>
               <div className="text-xs text-gray-600">Usually responds within 1 hour</div>
             </div>
           </div>
           
           <div className="p-3 bg-gray-50 rounded-md">
             <span className="text-sm">
-              Regarding: <strong>{service.title}</strong>
+              Regarding: <strong>{service.name}</strong>
             </span>
           </div>
           
