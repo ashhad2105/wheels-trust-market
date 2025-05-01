@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import Modal from "@/components/ui/modal";
-import { Mail, Key, Loader2 } from "lucide-react";
+import { Mail, Key, Loader2, User } from "lucide-react";
 
 const AuthModal = () => {
-  const { isAuthModalOpen, closeAuthModal, login } = useAuth();
+  const { isAuthModalOpen, closeAuthModal, login, register } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,8 +34,11 @@ const AuthModal = () => {
         return;
       }
 
-      // In a real app, this would call different endpoints for login vs signup
-      await login(email, password);
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register(name, email, password);
+      }
       closeAuthModal();
     } catch (err) {
       setError("Authentication failed. Please try again.");
@@ -50,14 +53,18 @@ const AuthModal = () => {
         {!isLogin && (
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Enter your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
           </div>
         )}
         

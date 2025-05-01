@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { Car, Menu, User, LogOut } from "lucide-react";
+import { Car, Menu, User, LogOut, Bell } from "lucide-react";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +26,11 @@ const Navbar = () => {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Function to determine if a link is active
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -45,25 +51,51 @@ const Navbar = () => {
         <nav className="hidden md:flex items-center space-x-8">
           <Link
             to="/"
-            className="text-gray-800 hover:text-primary transition-colors"
+            className={`transition-colors ${
+              isActive("/") 
+                ? "text-primary font-medium" 
+                : "text-gray-800 hover:text-primary"
+            }`}
           >
             Home
           </Link>
           <Link
-            to="/cars"
-            className="text-gray-800 hover:text-primary transition-colors"
+            to="/cars/buy"
+            className={`transition-colors ${
+              isActive("/cars/buy") 
+                ? "text-primary font-medium" 
+                : "text-gray-800 hover:text-primary"
+            }`}
           >
-            Buy/Sell
+            Buy Car
+          </Link>
+          <Link
+            to="/cars/sell"
+            className={`transition-colors ${
+              isActive("/cars/sell") 
+                ? "text-primary font-medium" 
+                : "text-gray-800 hover:text-primary"
+            }`}
+          >
+            Sell Car
           </Link>
           <Link
             to="/services"
-            className="text-gray-800 hover:text-primary transition-colors"
+            className={`transition-colors ${
+              isActive("/services") 
+                ? "text-primary font-medium" 
+                : "text-gray-800 hover:text-primary"
+            }`}
           >
             Services
           </Link>
           <Link
             to="/about"
-            className="text-gray-800 hover:text-primary transition-colors"
+            className={`transition-colors ${
+              isActive("/about") 
+                ? "text-primary font-medium" 
+                : "text-gray-800 hover:text-primary"
+            }`}
           >
             About
           </Link>
@@ -73,7 +105,8 @@ const Navbar = () => {
         <div className="hidden md:flex items-center space-x-4">
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              <div className="text-sm font-medium">
+              <Link to="/profile" className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors">
+                <User className="h-4 w-4" />
                 {user?.name}
                 <span className="ml-2 text-xs bg-primary text-white px-2 py-0.5 rounded-full">
                   {user?.role === "admin"
@@ -82,7 +115,17 @@ const Navbar = () => {
                     ? "Service Provider"
                     : "User"}
                 </span>
-              </div>
+              </Link>
+              
+              <Link to="/notifications">
+                <Button size="sm" variant="outline" className="relative">
+                  <Bell className="h-4 w-4" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+                    2
+                  </span>
+                </Button>
+              </Link>
+              
               {user?.role === "admin" ? (
                 <Link to="/admin-dashboard">
                   <Button size="sm" variant="outline">
@@ -144,11 +187,18 @@ const Navbar = () => {
               Home
             </Link>
             <Link
-              to="/cars"
+              to="/cars/buy"
               className="text-gray-800 py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Buy/Sell
+              Buy Car
+            </Link>
+            <Link
+              to="/cars/sell"
+              className="text-gray-800 py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sell Car
             </Link>
             <Link
               to="/services"
@@ -169,10 +219,26 @@ const Navbar = () => {
             
             {isAuthenticated ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <Link 
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2"
+                >
                   <User className="h-5 w-5" />
                   <span className="font-medium">{user?.name}</span>
-                </div>
+                </Link>
+                
+                <Link 
+                  to="/notifications"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="font-medium">Notifications</span>
+                  <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    2
+                  </span>
+                </Link>
                 
                 {user?.role === "admin" ? (
                   <Link 
