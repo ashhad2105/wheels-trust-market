@@ -18,6 +18,7 @@ import Notifications from "./pages/Notifications";
 import AdminDashboard from "./pages/AdminDashboard";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
 import NotFound from "./pages/NotFound";
+import ChatSystem from "./components/chat/ChatSystem";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/service-provider-dashboard/*" element={<ServiceProviderDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <ChatSystem minimized={true} />
           </BrowserRouter>
         </TooltipProvider>
       </HelmetProvider>
