@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link, Routes, Route } from "react-router-dom";
 import { 
   Car, 
   Users, 
@@ -13,16 +13,32 @@ import {
   Home, 
   Menu,
   Search,
-  Bell
+  Bell,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cars, services, serviceProviders } from "@/lib/data";
+import CarListingManagement from "@/components/car/CarListingManagement";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import AdminNotifications from "@/components/admin/AdminNotifications";
 
 const AdminDashboard = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "listings" | "providers" | "settings">("dashboard");
+  const { user, isAuthenticated, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "listings" | "providers" | "settings" | "notifications">("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { toast } = useToast();
 
   // Redirect if not authenticated or not admin
   if (!isAuthenticated || user?.role !== "admin") {
@@ -31,6 +47,20 @@ const AdminDashboard = () => {
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleUserStatusChange = (userId: string, newStatus: string) => {
+    toast({
+      title: "User Status Updated",
+      description: `User status has been changed to ${newStatus}`
+    });
+  };
+
+  const handleProviderStatusChange = (providerId: string, newStatus: string) => {
+    toast({
+      title: "Provider Status Updated",
+      description: `Provider status has been changed to ${newStatus}`
+    });
   };
 
   return (
@@ -101,6 +131,18 @@ const AdminDashboard = () => {
                   Service Providers
                 </button>
                 <button
+                  onClick={() => setActiveTab("notifications")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeTab === "notifications"
+                      ? "bg-primary text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                  <Badge className="ml-auto bg-red-500 text-white">3</Badge>
+                </button>
+                <button
                   onClick={() => setActiveTab("settings")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === "settings"
@@ -110,6 +152,13 @@ const AdminDashboard = () => {
                 >
                   <Settings className="h-5 w-5" />
                   Settings
+                </button>
+                <button
+                  onClick={logout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors mt-4"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Logout
                 </button>
               </nav>
             </div>
@@ -135,6 +184,7 @@ const AdminDashboard = () => {
                   {activeTab === "listings" && "Car Listings"}
                   {activeTab === "providers" && "Service Providers"}
                   {activeTab === "settings" && "Settings"}
+                  {activeTab === "notifications" && "Notifications"}
                 </h1>
               </div>
 
@@ -296,88 +346,70 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200"></div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">John Smith</div>
+                        {[
+                          { id: "1", name: "John Smith", email: "john@example.com", role: "User", status: "active" },
+                          { id: "2", name: "Sarah Johnson", email: "sarah@example.com", role: "User", status: "active" },
+                          { id: "3", name: "Michael Chen", email: "michael@example.com", role: "Service Provider", status: "active" },
+                          { id: "4", name: "Jessica Rodriguez", email: "jessica@example.com", role: "User", status: "inactive" },
+                          { id: "5", name: "David Wilson", email: "david@example.com", role: "User", status: "pending" }
+                        ].map(user => (
+                          <tr key={user.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">john@example.com</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">User</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Active
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                            <button className="text-red-600 hover:text-red-900">Delete</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200"></div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">Sarah Johnson</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">{user.role}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Select 
+                                defaultValue={user.status} 
+                                onValueChange={(value) => handleUserStatusChange(user.id, value)}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="active" className="flex items-center gap-2">
+                                    <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
+                                    Active
+                                  </SelectItem>
+                                  <SelectItem value="pending" className="flex items-center gap-2">
+                                    <span className="flex h-2 w-2 rounded-full bg-yellow-500"></span>
+                                    Pending
+                                  </SelectItem>
+                                  <SelectItem value="inactive" className="flex items-center gap-2">
+                                    <span className="flex h-2 w-2 rounded-full bg-red-500"></span>
+                                    Inactive
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm">
+                                  <Eye className="h-4 w-4 mr-1" /> View
+                                </Button>
+                                <Button variant="outline" size="sm">Edit</Button>
+                                <Button variant="destructive" size="sm">Delete</Button>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">sarah@example.com</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">User</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Active
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                            <button className="text-red-600 hover:text-red-900">Delete</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200"></div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">Michael Chen</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">michael@example.com</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">Service Provider</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Active
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                            <button className="text-red-600 hover:text-red-900">Delete</button>
-                          </td>
-                        </tr>
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
                   
                   <div className="mt-4 flex justify-between">
                     <div className="text-sm text-gray-500">
-                      Showing 1 to 3 of 50 results
+                      Showing 1 to 5 of 50 results
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" disabled>Previous</Button>
@@ -389,86 +421,7 @@ const AdminDashboard = () => {
 
               {/* Car Listings Tab */}
               {activeTab === "listings" && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <div className="relative w-full md:w-64">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-                      <Input 
-                        placeholder="Search listings..." 
-                        className="pl-10"
-                      />
-                    </div>
-                    <Button>Add New Listing</Button>
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Vehicle
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Price
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Seller
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {cars.slice(0, 3).map((car) => (
-                          <tr key={car.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <img 
-                                  src={car.image} 
-                                  alt={car.title}
-                                  className="h-10 w-16 object-cover rounded"
-                                />
-                                <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">{car.title}</div>
-                                  <div className="text-sm text-gray-500">{car.year} • {car.mileage} miles</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium">${car.price.toLocaleString()}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-500">{car.sellerType === 'dealer' ? 'Dealer' : 'Private'}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Active
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                              <button className="text-red-600 hover:text-red-900">Delete</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  <div className="mt-4 flex justify-between">
-                    <div className="text-sm text-gray-500">
-                      Showing 1 to 3 of {cars.length} results
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" disabled>Previous</Button>
-                      <Button variant="outline" size="sm">Next</Button>
-                    </div>
-                  </div>
-                </div>
+                <CarListingManagement />
               )}
 
               {/* Service Providers Tab */}
@@ -534,17 +487,39 @@ const AdminDashboard = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                provider.verified 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}>
-                                {provider.verified ? "Verified" : "Pending"}
-                              </span>
+                              <Select 
+                                defaultValue={provider.verified ? "verified" : "pending"} 
+                                onValueChange={(value) => handleProviderStatusChange(provider.id, value)}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="verified" className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                    Verified
+                                  </SelectItem>
+                                  <SelectItem value="pending" className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-yellow-500" />
+                                    Pending
+                                  </SelectItem>
+                                  <SelectItem value="rejected" className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-500" />
+                                    Rejected
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                              <button className="text-red-600 hover:text-red-900">Delete</button>
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link to={`/services/${provider.id}`}>
+                                    <Eye className="h-4 w-4 mr-1" /> View
+                                  </Link>
+                                </Button>
+                                <Button variant="outline" size="sm">Edit</Button>
+                                <Button variant="destructive" size="sm">Delete</Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -562,6 +537,11 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Notifications Tab */}
+              {activeTab === "notifications" && (
+                <AdminNotifications />
               )}
 
               {/* Settings Tab */}
