@@ -17,6 +17,7 @@ const cars = require('./routes/cars');
 const services = require('./routes/services');
 const bookings = require('./routes/bookings');
 const notifications = require('./routes/notifications');
+const serviceProviders = require('./routes/serviceProviders');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/v1/cars', cars);
 app.use('/api/v1/services', services);
 app.use('/api/v1/bookings', bookings);
 app.use('/api/v1/notifications', notifications);
+app.use('/api/v1/service-providers', serviceProviders); 
 
 // Error handler middleware - should be after routes
 app.use(errorHandler);
