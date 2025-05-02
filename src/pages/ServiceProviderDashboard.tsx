@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -27,10 +26,12 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import ServiceManagement from "@/components/service/ServiceManagement";
+import CarListingManagement from "@/components/car/CarListingManagement";
 
 const ServiceProviderDashboard = () => {
   const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "services" | "bookings" | "reviews" | "profile">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "services" | "cars" | "bookings" | "reviews" | "profile">("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Redirect if not authenticated or not service provider
@@ -114,6 +115,17 @@ const ServiceProviderDashboard = () => {
                   My Services
                 </button>
                 <button
+                  onClick={() => setActiveTab("cars")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeTab === "cars"
+                      ? "bg-primary text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Car className="h-5 w-5" />
+                  Car Listings
+                </button>
+                <button
                   onClick={() => setActiveTab("bookings")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     activeTab === "bookings"
@@ -167,6 +179,7 @@ const ServiceProviderDashboard = () => {
                 <h1 className="text-2xl font-bold">
                   {activeTab === "dashboard" && "Service Provider Dashboard"}
                   {activeTab === "services" && "My Services"}
+                  {activeTab === "cars" && "Car Listings"}
                   {activeTab === "bookings" && "Manage Bookings"}
                   {activeTab === "reviews" && "Customer Reviews"}
                   {activeTab === "profile" && "Profile Settings"}
@@ -310,132 +323,14 @@ const ServiceProviderDashboard = () => {
 
               {/* Services Tab */}
               {activeTab === "services" && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h2 className="text-lg font-semibold">My Service Offerings</h2>
-                      <p className="text-gray-500 text-sm">
-                        Manage the services you offer to customers
-                      </p>
-                    </div>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" /> Add Service
-                    </Button>
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Service Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Price
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Duration
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {services.map((service) => (
-                          <tr key={service.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{service.name}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-500">{service.price}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-500">{service.duration}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                service.status === "active" 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-gray-100 text-gray-800"
-                              }`}>
-                                {service.status === "active" ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button className="text-blue-600 hover:text-blue-900 mr-3">
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                <Trash className="h-4 w-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  <div className="mt-6 bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <h3 className="text-lg font-medium mb-4">Add New Service</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
-                        <Input placeholder="e.g. Brake Inspection" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                        <Input placeholder="e.g. 49.99" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select duration" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="15">15 minutes</SelectItem>
-                            <SelectItem value="30">30 minutes</SelectItem>
-                            <SelectItem value="45">45 minutes</SelectItem>
-                            <SelectItem value="60">1 hour</SelectItem>
-                            <SelectItem value="90">1.5 hours</SelectItem>
-                            <SelectItem value="120">2 hours</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
-                            <SelectItem value="repair">Repair</SelectItem>
-                            <SelectItem value="inspection">Inspection</SelectItem>
-                            <SelectItem value="detailing">Detailing</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                          className="w-full rounded-md border border-gray-300 shadow-sm p-3 focus:outline-none focus:ring-primary focus:border-primary"
-                          rows={3}
-                          placeholder="Describe the service..."
-                        ></textarea>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <Button>Save Service</Button>
-                    </div>
-                  </div>
-                </div>
+                <ServiceManagement />
               )}
 
+              {/* Cars Tab */}
+              {activeTab === "cars" && (
+                <CarListingManagement />
+              )}
+              
               {/* Bookings Tab */}
               {activeTab === "bookings" && (
                 <div className="space-y-6">
