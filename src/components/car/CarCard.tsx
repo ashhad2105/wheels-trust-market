@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CarType } from "@/lib/data";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Info } from "lucide-react";
 
 interface CarCardProps {
@@ -13,14 +13,10 @@ interface CarCardProps {
 
 const CarCard: React.FC<CarCardProps> = ({ car }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
+  const navigate = useNavigate();
 
-  const handleContactClick = () => {
-    if (!isAuthenticated) {
-      openAuthModal();
-    } else {
-      // In a real app, this would open a contact modal or redirect to a contact page
-      alert("Contact feature would open here");
-    }
+  const handleViewDetails = () => {
+    navigate(`/cars/details/${car.id}`);
   };
 
   const formatPrice = (price: number) => {
@@ -114,9 +110,9 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
           
           <Button 
             className="w-full button-gradient text-white"
-            onClick={handleContactClick}
+            onClick={handleViewDetails}
           >
-            Contact Seller
+            View Details
           </Button>
         </div>
       </div>

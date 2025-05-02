@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import Modal from "@/components/ui/modal";
 import { Mail, Key, Loader2, User } from "lucide-react";
+import { login, register } from "@/services/auth";
 
 const AuthModal = () => {
-  const { isAuthModalOpen, closeAuthModal, login, register } = useAuth();
+  const { isAuthModalOpen, closeAuthModal } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,8 +40,8 @@ const AuthModal = () => {
         await register(name, email, password);
       }
       closeAuthModal();
-    } catch (err) {
-      setError("Authentication failed. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }

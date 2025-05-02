@@ -46,7 +46,7 @@ const CarListingPreview: React.FC<CarListingPreviewProps> = ({ cars }) => {
               List your vehicle on WheelsTrust and connect with serious buyers. Our transparent 
               process ensures you get fair market value with no hidden fees.
             </p>
-            <Link to="/cars">
+            <Link to="/cars/sell">
               <Button className="button-gradient text-white">
                 Start Selling
               </Button>
