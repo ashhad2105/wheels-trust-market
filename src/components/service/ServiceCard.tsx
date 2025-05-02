@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ServiceType } from "@/lib/data";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 
 interface ServiceCardProps {
@@ -13,6 +13,7 @@ interface ServiceCardProps {
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
+  const navigate = useNavigate();
 
   const handleBookClick = () => {
     if (!isAuthenticated) {
@@ -21,6 +22,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
       // In a real app, this would open a booking modal or redirect to a booking page
       alert("Booking feature would open here");
     }
+  };
+
+  const handleViewDetails = () => {
+    navigate(`/services/${service.id}`);
   };
 
   return (
@@ -88,10 +93,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         </div>
         
         <Button 
-          onClick={handleBookClick}
+          onClick={handleViewDetails}
           className="w-full button-gradient text-white"
         >
-          Book Service
+          View Details
         </Button>
       </div>
     </Card>
