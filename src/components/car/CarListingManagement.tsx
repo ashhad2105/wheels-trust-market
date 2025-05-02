@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Eye, Plus, Trash } from "lucide-react";
+import { Edit, Eye, Plus, Trash, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +81,7 @@ const CarListingManagement: React.FC = () => {
       price: newListing.price || "",
       mileage: newListing.mileage || "",
       description: newListing.description || "",
-      condition: newListing.condition || "Good",
+      condition: newListing.condition as "Excellent" | "Good" | "Fair" | "Poor" || "Good",
       location: newListing.location || "",
       status: "active",
       images: newListing.images || []
@@ -133,7 +134,7 @@ const CarListingManagement: React.FC = () => {
     onSave: (data: Partial<CarListing>) => void,
     onCancel: () => void
   }) => {
-    const [formData, setFormData] = useState(initialData || {
+    const [formData, setFormData] = useState<Partial<CarListing>>(initialData || {
       year: "",
       make: "",
       model: "",
@@ -151,7 +152,14 @@ const CarListingManagement: React.FC = () => {
     };
 
     const handleSelectChange = (name: string, value: string) => {
-      setFormData({ ...formData, [name]: value });
+      if (name === "condition") {
+        setFormData({ 
+          ...formData, 
+          [name]: value as "Excellent" | "Good" | "Fair" | "Poor" 
+        });
+      } else {
+        setFormData({ ...formData, [name]: value });
+      }
     };
 
     const handleImageAdd = () => {
@@ -169,7 +177,7 @@ const CarListingManagement: React.FC = () => {
       });
     };
 
-    const handleSubmit = (e: React.Event) => {
+    const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       if (!formData.year || !formData.make || !formData.model || !formData.price) {
         toast({
