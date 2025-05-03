@@ -20,6 +20,11 @@ const AuthModal = () => {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setError("");
+    // Reset fields when toggling
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setName("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,13 +40,16 @@ const AuthModal = () => {
       }
 
       if (isLogin) {
+        console.log("Attempting login with:", { email, password });
         await login(email, password);
       } else {
+        console.log("Attempting registration with:", { name, email, password });
         await register(name, email, password);
       }
       closeAuthModal();
-    } catch (err) {
-      setError("Authentication failed. Please try again.");
+    } catch (err: any) {
+      console.error("Auth error:", err);
+      setError(err.response?.data?.error || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }

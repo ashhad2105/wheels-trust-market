@@ -65,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           phone: userData.phone,
           joinedDate: new Date(userData.createdAt).toISOString().split('T')[0]
         });
+        console.log("Fetched user data:", userData);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -80,10 +81,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (response.data.success) {
-        const { token, user: userData } = response.data;
+        // The API returns { success: true, token: "...", data: { user object } }
+        const { token, data } = response.data;
         
         // Save token to localStorage
         localStorage.setItem('token', token);
+        
+        const userData = data;
         
         setUser({
           id: userData._id,
@@ -94,6 +98,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           phone: userData.phone || undefined,
           joinedDate: new Date(userData.createdAt).toISOString().split('T')[0]
         });
+        
+        console.log("Logged in as:", userData);
         
         toast({
           title: "Login Successful",
@@ -119,10 +125,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (response.data.success) {
-        const { token, user: userData } = response.data;
+        const { token, data } = response.data;
         
         // Save token to localStorage
         localStorage.setItem('token', token);
+        
+        const userData = data;
         
         setUser({
           id: userData._id,

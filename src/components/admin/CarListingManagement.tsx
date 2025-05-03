@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Search, Plus, Edit, Trash, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -59,8 +59,10 @@ const CarListingManagement = () => {
         }
       );
       
+      console.log("Car listings response:", response.data);
+      
       if (response.data.success) {
-        setCarListings(response.data.data.cars || []);
+        setCarListings(response.data.data || []);
       } else {
         setError("Failed to fetch car listings");
         toast({
@@ -291,7 +293,7 @@ const CarListingManagement = () => {
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to={`/cars/${car._id}`}>
+                        <Link to={`/cars/details/${car._id}`}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
