@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 const serviceProviderSchema = new mongoose.Schema({
@@ -48,6 +49,11 @@ const serviceProviderSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  status: {
+    type: String,
+    enum: ['active', 'pending', 'inactive', 'suspended'],
+    default: 'pending'
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -69,4 +75,17 @@ serviceProviderSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('ServiceProvider', serviceProviderSchema); 
+// When a service provider is created, update the user role to 'service_provider'
+serviceProviderSchema.post('save', async function() {
+  try {
+    // Only run this if it's a new document
+    if (this.isNew) {
+      const User = mongoose.model('User');
+      await User.findByIdAndUpdate(this.user, { role: 'service_provider' });
+    }
+  } catch (err) {
+    console.error('Error updating user role:', err);
+  }
+});
+
+module.exports = mongoose.model('ServiceProvider', serviceProviderSchema);

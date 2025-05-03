@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,51 +8,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Search, Plus, Edit, Trash, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  role: 'admin' | 'service-provider' | 'user';
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
-  dateCreated: string;
+  role: 'admin' | 'service_provider' | 'user';
+  status: 'active' | 'inactive' | 'pending';
+  createdAt: string;
 }
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "user",
-      status: "active",
-      dateCreated: "2023-04-12"
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "service-provider",
-      status: "active",
-      dateCreated: "2023-05-22"
-    },
-    {
-      id: "3",
-      name: "Admin User",
-      email: "admin@example.com",
-      role: "admin",
-      status: "active",
-      dateCreated: "2023-01-05"
-    },
-    {
-      id: "4",
-      name: "Test User",
-      email: "test@example.com",
-      role: "user",
-      status: "inactive",
-      dateCreated: "2023-06-10"
-    }
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -63,9 +33,46 @@ const UserManagement = () => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+    password: "",
     role: "user" as User["role"],
     status: "active" as User["status"],
   });
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.data.success) {
+        setUsers(response.data.data);
+      } else {
+        setError("Failed to fetch users");
+        toast({
+          title: "Error",
+          description: "Failed to fetch users",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setError("Failed to fetch users");
+      toast({
+        title: "Error",
+        description: "Failed to fetch users. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
@@ -76,9 +83,9 @@ const UserManagement = () => {
     );
   });
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     // Simple validation
-    if (!newUser.name || !newUser.email) {
+    if (!newUser.name || !newUser.email || !newUser.password) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields.",
@@ -87,70 +94,183 @@ const UserManagement = () => {
       return;
     }
 
-    const user: User = {
-      id: Date.now().toString(),
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      status: newUser.status,
-      dateCreated: new Date().toISOString().split("T")[0],
-    };
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users`, 
+        newUser,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
 
-    setUsers([...users, user]);
-    setNewUser({
-      name: "",
-      email: "",
-      role: "user",
-      status: "active",
-    });
-    setIsAddUserOpen(false);
+      if (response.data.success) {
+        // Add the new user to the state
+        setUsers([...users, response.data.data]);
+        
+        // Reset the form
+        setNewUser({
+          name: "",
+          email: "",
+          password: "",
+          role: "user",
+          status: "active",
+        });
+        
+        setIsAddUserOpen(false);
 
-    toast({
-      title: "User Added",
-      description: `${user.name} has been added successfully.`,
-    });
+        toast({
+          title: "User Added",
+          description: `${response.data.data.name} has been added successfully.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to add user",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error adding user:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to add user",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = async () => {
     if (!currentUser) return;
 
-    setUsers(
-      users.map(user => 
-        user.id === currentUser.id ? currentUser : user
-      )
-    );
-    
-    setIsEditUserOpen(false);
-    
-    toast({
-      title: "User Updated",
-      description: `${currentUser.name}'s information has been updated.`,
-    });
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${currentUser._id}`,
+        {
+          name: currentUser.name,
+          email: currentUser.email,
+          role: currentUser.role,
+          status: currentUser.status
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setUsers(
+          users.map(user => 
+            user._id === currentUser._id ? response.data.data : user
+          )
+        );
+        
+        setIsEditUserOpen(false);
+        
+        toast({
+          title: "User Updated",
+          description: `${currentUser.name}'s information has been updated.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to update user",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update user",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
-    const userToDelete = users.find(user => user.id === id);
-    if (!userToDelete) return;
+  const handleDeleteUser = async (id: string) => {
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
 
-    setUsers(users.filter(user => user.id !== id));
-    
-    toast({
-      title: "User Deleted",
-      description: `${userToDelete.name} has been removed.`,
-    });
+      if (response.data.success) {
+        const userToDelete = users.find(user => user._id === id);
+        if (!userToDelete) return;
+
+        setUsers(users.filter(user => user._id !== id));
+        
+        toast({
+          title: "User Deleted",
+          description: `${userToDelete.name} has been removed.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to delete user",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to delete user",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleStatusChange = (id: string, status: User["status"]) => {
-    setUsers(prevUsers => prevUsers.map(user => 
-      user.id === id ? { ...user, status } : user
-    ));
+  const handleStatusChange = async (id: string, status: User["status"]) => {
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${id}/status`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
 
-    const user = users.find(user => user.id === id);
-    
-    toast({
-      title: "Status Updated",
-      description: `${user?.name}'s status has been updated to ${status}.`,
-    });
+      if (response.data.success) {
+        setUsers(prevUsers => prevUsers.map(user => 
+          user._id === id ? { ...user, status } : user
+        ));
+
+        const user = users.find(user => user._id === id);
+        
+        toast({
+          title: "Status Updated",
+          description: `${user?.name}'s status has been updated to ${status}.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to update status",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -198,6 +318,15 @@ const UserManagement = () => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium">Password</label>
+                <Input
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  placeholder="Enter password"
+                  type="password"
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Role</label>
                 <Select
                   value={newUser.role}
@@ -208,7 +337,7 @@ const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="service-provider">Service Provider</SelectItem>
+                    <SelectItem value="service_provider">Service Provider</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -226,7 +355,6 @@ const UserManagement = () => {
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -278,7 +406,7 @@ const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="service-provider">Service Provider</SelectItem>
+                    <SelectItem value="service_provider">Service Provider</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -296,7 +424,6 @@ const UserManagement = () => {
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -324,26 +451,40 @@ const UserManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.length > 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-destructive">
+                  {error}. <Button variant="link" onClick={fetchUsers}>Try again</Button>
+                </TableCell>
+              </TableRow>
+            ) : filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user._id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       user.role === 'admin' 
                         ? 'bg-purple-100 text-purple-800' 
-                        : user.role === 'service-provider' 
+                        : user.role === 'service_provider' 
                         ? 'bg-blue-100 text-blue-800' 
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {user.role === 'service-provider' ? 'Service Provider' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      {user.role === 'service_provider' ? 'Service Provider' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                     </span>
                   </TableCell>
                   <TableCell>
                     <Select
                       value={user.status}
-                      onValueChange={(value) => handleStatusChange(user.id, value as User["status"])}
+                      onValueChange={(value) => handleStatusChange(user._id, value as User["status"])}
                     >
                       <SelectTrigger className="h-8 w-32">
                         <SelectValue />
@@ -364,15 +505,10 @@ const UserManagement = () => {
                             <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span> Pending
                           </span>
                         </SelectItem>
-                        <SelectItem value="suspended">
-                          <span className="flex items-center">
-                            <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span> Suspended
-                          </span>
-                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>{user.dateCreated}</TableCell>
+                  <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -405,7 +541,7 @@ const UserManagement = () => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteUser(user.id)}
+                              onClick={() => handleDeleteUser(user._id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               Delete
