@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: userData.role,
           avatar: userData.avatar,
           phone: userData.phone,
-          joinedDate: new Date(userData.createdAt).toISOString().split('T')[0]
+          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
         });
         console.log("Fetched user data:", userData);
       }
@@ -81,13 +81,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (response.data.success) {
-        // The API returns { success: true, token: "...", data: { user object } }
-        const { token, data } = response.data;
+        console.log("Login response:", response.data);
+        
+        // Get token and user data from response
+        const { token, data: userData } = response.data;
+        
+        if (!userData || !userData._id) {
+          throw new Error("Invalid user data received from server");
+        }
         
         // Save token to localStorage
         localStorage.setItem('token', token);
-        
-        const userData = data;
         
         setUser({
           id: userData._id,
@@ -96,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: userData.role,
           avatar: userData.avatar || undefined,
           phone: userData.phone || undefined,
-          joinedDate: new Date(userData.createdAt).toISOString().split('T')[0]
+          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
         });
         
         console.log("Logged in as:", userData);
@@ -125,19 +129,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (response.data.success) {
-        const { token, data } = response.data;
+        const { token, data: userData } = response.data;
+        
+        if (!userData || !userData._id) {
+          throw new Error("Invalid user data received from server");
+        }
         
         // Save token to localStorage
         localStorage.setItem('token', token);
-        
-        const userData = data;
         
         setUser({
           id: userData._id,
           name: userData.name,
           email: userData.email,
           role: userData.role,
-          joinedDate: new Date(userData.createdAt).toISOString().split('T')[0]
+          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
         });
         
         toast({

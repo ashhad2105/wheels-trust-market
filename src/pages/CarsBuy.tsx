@@ -1,9 +1,9 @@
+
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CarGrid from "@/components/car/CarGrid";
-import { cars } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 
 const CarsBuy = () => {
@@ -25,9 +25,6 @@ const CarsBuy = () => {
             </p>
             
             <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-500">
-                <span className="font-medium text-primary">{cars.length}</span> cars available
-              </p>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
                   Save Search
@@ -39,7 +36,8 @@ const CarsBuy = () => {
             </div>
           </div>
           
-          <CarGrid cars={cars} />
+          {/* Use CarGrid without providing cars - it will fetch them from the API */}
+          <CarGrid />
         </section>
       </main>
       

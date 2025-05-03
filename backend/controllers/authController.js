@@ -199,12 +199,20 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
+  // Convert user document to plain object to prevent sensitive data leakage
+  const userData = user.toObject ? user.toObject() : user;
+  
+  // Remove password field from response
+  if (userData.password) {
+    delete userData.password;
+  }
+
   res
     .status(statusCode)
     .cookie('token', token, options)
     .json({
       success: true,
       token,
-      data: user
+      data: userData
     });
 };

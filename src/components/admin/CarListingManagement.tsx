@@ -44,6 +44,7 @@ const CarListingManagement = () => {
 
   const fetchCarListings = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -62,7 +63,13 @@ const CarListingManagement = () => {
       console.log("Car listings response:", response.data);
       
       if (response.data.success) {
-        setCarListings(response.data.data || []);
+        // Check if data.cars exists (for pagination structure) or use data directly
+        const cars = response.data.data.cars || response.data.data || [];
+        setCarListings(cars);
+        
+        if (cars.length === 0) {
+          console.log("No car listings found in response");
+        }
       } else {
         setError("Failed to fetch car listings");
         toast({
@@ -84,15 +91,16 @@ const CarListingManagement = () => {
     }
   };
 
-  const filteredCarListings = carListings.length > 0 ? carListings.filter(car => {
+  const filteredCarListings = carListings.filter(car => {
+    if (!car) return false;
     const searchLower = searchTerm.toLowerCase();
     return (
-      car.make.toLowerCase().includes(searchLower) ||
-      car.model.toLowerCase().includes(searchLower) ||
-      car.year.toString().includes(searchLower) ||
-      car.location.toLowerCase().includes(searchLower)
+      car.make?.toLowerCase().includes(searchLower) ||
+      car.model?.toLowerCase().includes(searchLower) ||
+      car.year?.toString().includes(searchLower) ||
+      car.location?.toLowerCase().includes(searchLower)
     );
-  }) : [];
+  });
 
   const handleStatusChange = async (carId: string, status: string) => {
     try {
@@ -172,11 +180,13 @@ const CarListingManagement = () => {
   };
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
     const date = new Date(dateStr);
-    return date.toLocaleDateString();
+    return isNaN(date.getTime()) ? "Invalid date" : date.toLocaleDateString();
   };
 
   const formatPrice = (price: string) => {
+    if (!price) return "N/A";
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
