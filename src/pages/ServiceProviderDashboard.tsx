@@ -1,657 +1,391 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { Navigate } from "react-router-dom";
-import { 
-  Car, 
-  Calendar,
-  Settings, 
-  User, 
-  LogOut, 
-  Home, 
-  Menu,
-  Bell,
-  Mail,
-  Plus,
-  Edit,
-  Trash
-} from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Settings, User, Home, Bell, Calendar, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import ServiceManagement from "@/components/service/ServiceManagement";
-import CarListingManagement from "@/components/car/CarListingManagement";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import axios from "axios";
 
 const ServiceProviderDashboard = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "services" | "cars" | "bookings" | "reviews" | "profile">("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user, isAuthenticated, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [services, setServices] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Redirect if not authenticated or not service provider
-  if (!isAuthenticated || user?.role !== "service_provider") {
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "service_provider") {
+      fetchProviderData();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchProviderData = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      
+      // Fetch services offered by this provider
+      const servicesResponse = await axios.get(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/services?serviceProvider=${user?.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Fetch bookings for this provider
+      const bookingsResponse = await axios.get(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/bookings/provider`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setServices(servicesResponse.data.data || []);
+      setBookings(bookingsResponse.data.data || []);
+    } catch (error) {
+      console.error("Error fetching provider data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== "service_provider") {
     return <Navigate to="/" replace />;
   }
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  // Mock data
-  const pendingBookings = [
-    { id: 1, service: "Oil Change", customer: "John Smith", date: "2025-05-01", time: "10:00 AM", status: "pending" },
-    { id: 2, service: "Tire Rotation", customer: "Sarah Johnson", date: "2025-05-02", time: "2:30 PM", status: "pending" },
-    { id: 3, service: "Brake Inspection", customer: "Michael Chen", date: "2025-05-03", time: "11:15 AM", status: "pending" },
-  ];
-
-  const completedBookings = [
-    { id: 4, service: "Oil Change", customer: "Jessica Rodriguez", date: "2025-04-25", time: "9:00 AM", status: "completed" },
-    { id: 5, service: "Engine Diagnostic", customer: "David Kim", date: "2025-04-24", time: "3:45 PM", status: "completed" },
-  ];
-
-  const services = [
-    { id: 1, name: "Standard Oil Change", price: "$49.99", duration: "30 min", status: "active" },
-    { id: 2, name: "Premium Oil Change", price: "$89.99", duration: "45 min", status: "active" },
-    { id: 3, name: "Tire Rotation", price: "$60.00", duration: "60 min", status: "active" },
-    { id: 4, name: "Brake Pad Replacement", price: "$180.00", duration: "120 min", status: "active" },
-    { id: 5, name: "Multi-Point Inspection", price: "$120.00", duration: "60 min", status: "inactive" },
-  ];
-
-  const reviews = [
-    { id: 1, customer: "John Smith", service: "Oil Change", rating: 5, comment: "Great service and very professional. Will definitely return.", date: "2025-04-22" },
-    { id: 2, customer: "Sarah Johnson", service: "Brake Pad Replacement", rating: 4, comment: "Good work, but took a bit longer than expected.", date: "2025-04-20" },
-    { id: 3, customer: "Michael Chen", service: "Tire Rotation", rating: 5, comment: "Excellent service and fair pricing.", date: "2025-04-18" },
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Service Provider Dashboard | WheelsTrust</title>
+      </Helmet>
       <Navbar />
-      <div className="flex-grow pt-16 bg-gray-50">
-        <div className="flex">
-          {/* Sidebar */}
-          <div 
-            className={`fixed top-16 left-0 bottom-0 z-30 transition-all duration-300 ${
-              sidebarOpen ? "w-64" : "w-0"
-            } bg-white shadow-lg overflow-hidden`}
-          >
-            <div className="p-4">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Settings className="h-5 w-5 text-primary" />
+      <div className="flex-grow pt-24 pb-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Sidebar */}
+            <aside className="md:w-1/4 bg-white p-6 rounded-lg shadow-sm h-fit">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">{user?.name}</p>
-                  <p className="text-xs text-gray-500">Service Provider</p>
+                  <h3 className="font-semibold text-lg">{user?.name}</h3>
+                  <p className="text-sm text-gray-500">Service Provider</p>
                 </div>
               </div>
               
-              <nav className="space-y-1">
+              <nav className="space-y-2">
                 <button
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md text-left ${activeTab === "dashboard" ? "bg-primary text-white" : "hover:bg-gray-100"}`}
                   onClick={() => setActiveTab("dashboard")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === "dashboard"
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100"
-                  }`}
                 >
                   <Home className="h-5 w-5" />
                   Dashboard
                 </button>
                 <button
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md text-left ${activeTab === "services" ? "bg-primary text-white" : "hover:bg-gray-100"}`}
                   onClick={() => setActiveTab("services")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === "services"
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100"
-                  }`}
                 >
                   <Settings className="h-5 w-5" />
                   My Services
                 </button>
                 <button
-                  onClick={() => setActiveTab("cars")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === "cars"
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <Car className="h-5 w-5" />
-                  Car Listings
-                </button>
-                <button
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md text-left ${activeTab === "bookings" ? "bg-primary text-white" : "hover:bg-gray-100"}`}
                   onClick={() => setActiveTab("bookings")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === "bookings"
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100"
-                  }`}
                 >
                   <Calendar className="h-5 w-5" />
                   Bookings
                 </button>
                 <button
-                  onClick={() => setActiveTab("reviews")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === "reviews"
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <Mail className="h-5 w-5" />
-                  Reviews
-                </button>
-                <button
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md text-left ${activeTab === "profile" ? "bg-primary text-white" : "hover:bg-gray-100"}`}
                   onClick={() => setActiveTab("profile")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === "profile"
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100"
-                  }`}
                 >
                   <User className="h-5 w-5" />
                   Profile
                 </button>
-              </nav>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div 
-            className={`transition-all duration-300 ${
-              sidebarOpen ? "ml-64" : "ml-0"
-            } flex-1`}
-          >
-            <div className="p-6">
-              <div className="flex items-center mb-6">
                 <button 
-                  onClick={toggleSidebar}
-                  className="mr-4 p-2 rounded-lg hover:bg-gray-200"
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-md text-red-600 hover:bg-red-50 mt-8"
+                  onClick={handleLogout}
                 >
-                  <Menu className="h-5 w-5" />
+                  <LogOut className="h-5 w-5" />
+                  Logout
                 </button>
-                <h1 className="text-2xl font-bold">
-                  {activeTab === "dashboard" && "Service Provider Dashboard"}
-                  {activeTab === "services" && "My Services"}
-                  {activeTab === "cars" && "Car Listings"}
-                  {activeTab === "bookings" && "Manage Bookings"}
-                  {activeTab === "reviews" && "Customer Reviews"}
-                  {activeTab === "profile" && "Profile Settings"}
-                </h1>
-              </div>
-
-              {/* Dashboard Content */}
-              {activeTab === "dashboard" && (
-                <div className="space-y-6">
-                  {/* Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-500 text-sm">Today's Bookings</p>
-                          <p className="text-2xl font-bold">3</p>
-                        </div>
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-500 text-sm">Pending Bookings</p>
-                          <p className="text-2xl font-bold">{pendingBookings.length}</p>
-                        </div>
-                        <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
-                          <Clock className="h-5 w-5 text-blue-600" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-500 text-sm">Active Services</p>
-                          <p className="text-2xl font-bold">{services.filter(s => s.status === "active").length}</p>
-                        </div>
-                        <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
-                          <Settings className="h-5 w-5 text-green-600" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-500 text-sm">Average Rating</p>
-                          <p className="text-2xl font-bold">4.7</p>
-                        </div>
-                        <div className="h-10 w-10 rounded-full bg-yellow-50 flex items-center justify-center">
-                          <svg className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+              </nav>
+            </aside>
+            
+            {/* Main Content */}
+            <main className="md:w-3/4">
+              {/* Dashboard Tab */}
+              <TabsContent value="dashboard" className={activeTab === "dashboard" ? "block" : "hidden"}>
+                <h1 className="text-2xl font-bold mb-6">Service Provider Dashboard</h1>
+                
+                {isLoading ? (
+                  <div className="flex justify-center p-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                   </div>
-
-                  {/* Upcoming Bookings */}
-                  <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b">
-                      <h3 className="text-lg font-medium">Upcoming Bookings</h3>
-                    </div>
-                    <div className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {pendingBookings.map((booking) => (
-                              <tr key={booking.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{booking.service}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.customer}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.date}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.time}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button className="text-blue-600 hover:text-blue-900 mr-3">Complete</button>
-                                  <button className="text-red-600 hover:text-red-900">Cancel</button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">Total Services</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">{services.length}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">Active Bookings</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">{bookings.filter(b => b.status === "confirmed").length}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-500">This Month's Revenue</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold">$2,345</p>
+                      </CardContent>
+                    </Card>
                   </div>
-
-                  {/* Recent Reviews */}
-                  <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b">
-                      <h3 className="text-lg font-medium">Recent Reviews</h3>
-                    </div>
-                    <div className="p-6">
+                )}
+                
+                {/* Recent Activity / Upcoming Bookings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Upcoming Bookings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {bookings.length > 0 ? (
                       <div className="space-y-4">
-                        {reviews.slice(0, 2).map((review) => (
-                          <div key={review.id} className="border rounded-lg p-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <p className="font-medium">{review.customer}</p>
-                                <p className="text-sm text-gray-500">{review.service} • {review.date}</p>
-                              </div>
-                              <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                  <svg
-                                    key={i}
-                                    className={`h-5 w-5 ${
-                                      i < review.rating ? "text-yellow-400" : "text-gray-300"
-                                    }`}
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                  </svg>
-                                ))}
-                              </div>
+                        {bookings.slice(0, 5).map((booking, index) => (
+                          <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                            <div>
+                              <p className="font-medium">{booking.service?.name || "Service Appointment"}</p>
+                              <p className="text-sm text-gray-500">Customer: {booking.user?.name || "Unknown"}</p>
                             </div>
-                            <p className="text-gray-700">{review.comment}</p>
+                            <div className="text-right">
+                              <p className="text-sm font-medium">{new Date(booking.date).toLocaleDateString()}</p>
+                              <p className="text-sm text-gray-500">{booking.timeSlot}</p>
+                            </div>
                           </div>
                         ))}
-                        <div className="text-center">
-                          <button 
-                            className="text-primary hover:text-blue-700 font-medium"
-                            onClick={() => setActiveTab("reviews")}
-                          >
-                            View All Reviews
-                          </button>
-                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Services Tab */}
-              {activeTab === "services" && (
-                <ServiceManagement />
-              )}
-
-              {/* Cars Tab */}
-              {activeTab === "cars" && (
-                <CarListingManagement />
-              )}
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No upcoming bookings</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
               
-              {/* Bookings Tab */}
-              {activeTab === "bookings" && (
-                <div className="space-y-6">
-                  <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b">
-                      <h3 className="text-lg font-medium">Pending Bookings</h3>
-                    </div>
-                    <div className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {pendingBookings.map((booking) => (
-                              <tr key={booking.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{booking.service}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.customer}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.date}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.time}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button className="text-green-600 hover:text-green-900 mr-3">Complete</button>
-                                  <button className="text-red-600 hover:text-red-900">Cancel</button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b">
-                      <h3 className="text-lg font-medium">Completed Bookings</h3>
-                    </div>
-                    <div className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {completedBookings.map((booking) => (
-                              <tr key={booking.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{booking.service}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.customer}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.date}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.time}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Completed
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
+              {/* Services Tab */}
+              <TabsContent value="services" className={activeTab === "services" ? "block" : "hidden"}>
+                <div className="flex justify-between items-center mb-6">
+                  <h1 className="text-2xl font-bold">My Services</h1>
+                  <Button>Add New Service</Button>
                 </div>
-              )}
-
-              {/* Reviews Tab */}
-              {activeTab === "reviews" && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h2 className="text-lg font-semibold">Customer Reviews</h2>
-                      <p className="text-gray-500 text-sm">
-                        See what customers are saying about your services
-                      </p>
-                    </div>
-                    <div className="bg-blue-50 px-4 py-2 rounded-lg flex items-center">
-                      <span className="text-lg font-bold text-blue-700 mr-2">4.7</span>
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`h-5 w-5 ${i < 4 ? "text-yellow-400" : "text-yellow-400 opacity-50"}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                          </svg>
-                        ))}
-                      </div>
-                      <span className="ml-1 text-sm text-gray-600">(23 reviews)</span>
-                    </div>
+                
+                {isLoading ? (
+                  <div className="flex justify-center p-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                   </div>
-                  
-                  <div className="space-y-6">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="border rounded-lg p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <p className="font-medium text-lg">{review.customer}</p>
-                            <p className="text-sm text-gray-500">{review.service} • {review.date}</p>
-                          </div>
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <svg
-                                key={i}
-                                className={`h-5 w-5 ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                              </svg>
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-gray-700">{review.comment}</p>
-                        <div className="mt-4 pt-4 border-t">
-                          <div className="flex items-start space-x-3">
-                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Mail className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <textarea
-                                className="w-full rounded-md border border-gray-300 text-sm p-2 focus:outline-none focus:ring-primary focus:border-primary"
-                                rows={2}
-                                placeholder="Reply to this review..."
-                              ></textarea>
-                              <div className="mt-2 text-right">
-                                <Button size="sm">Send Reply</Button>
+                ) : services.length > 0 ? (
+                  <div className="space-y-4">
+                    {services.map((service, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-0">
+                          <div className="flex flex-col md:flex-row">
+                            <div className="md:w-1/4 h-40 bg-gray-100"></div>
+                            <div className="p-6 md:w-3/4">
+                              <h3 className="text-lg font-semibold mb-2">{service.name}</h3>
+                              <p className="text-sm text-gray-600 mb-4">{service.description}</p>
+                              <div className="flex flex-wrap gap-4 text-sm mb-4">
+                                <div>
+                                  <span className="font-medium">Price:</span> ${service.price}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Duration:</span> {service.duration} minutes
+                                </div>
+                                <div>
+                                  <span className="font-medium">Category:</span> {service.category}
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm">Edit</Button>
+                                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">Delete</Button>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Profile Tab */}
-              {activeTab === "profile" && (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                  <div className="px-6 py-4 border-b">
-                    <h3 className="text-lg font-medium">Profile Settings</h3>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <Settings className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Services Listed</h3>
+                    <p className="text-gray-500 mb-6">You haven't added any services yet.</p>
+                    <Button>Add Your First Service</Button>
                   </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="md:col-span-1">
-                        <div className="flex flex-col items-center p-6 bg-gray-50 rounded-lg">
-                          <div className="h-32 w-32 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-                            <User className="h-16 w-16 text-gray-500" />
-                          </div>
-                          <Button variant="outline" className="w-full">
-                            Upload Photo
-                          </Button>
-                          <p className="mt-2 text-xs text-gray-500">
-                            PNG, JPG or GIF up to 5MB
-                          </p>
+                )}
+              </TabsContent>
+              
+              {/* Profile Tab */}
+              <TabsContent value="profile" className={activeTab === "profile" ? "block" : "hidden"}>
+                <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-6">
+                      <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="lg:w-1/3 space-y-2">
+                          <label className="text-sm font-medium">Full Name</label>
+                          <Input defaultValue={user?.name || ""} />
+                        </div>
+                        <div className="lg:w-1/3 space-y-2">
+                          <label className="text-sm font-medium">Email</label>
+                          <Input defaultValue={user?.email || ""} />
+                        </div>
+                        <div className="lg:w-1/3 space-y-2">
+                          <label className="text-sm font-medium">Phone</label>
+                          <Input defaultValue={user?.phone || ""} />
                         </div>
                       </div>
-                      <div className="md:col-span-2">
-                        <div className="space-y-6">
-                          <h4 className="text-md font-medium mb-4">Business Information</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
-                                Business Name
-                              </label>
-                              <Input
-                                id="businessName"
-                                defaultValue="AutoCare Express"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                Email
-                              </label>
-                              <Input
-                                id="email"
-                                type="email"
-                                defaultValue="contact@autocareexpress.com"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone
-                              </label>
-                              <Input
-                                id="phone"
-                                defaultValue="(555) 123-4567"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
-                                Website
-                              </label>
-                              <Input
-                                id="website"
-                                defaultValue="https://autocareexpress.com"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                                Address
-                              </label>
-                              <Input
-                                id="address"
-                                defaultValue="123 Auto Avenue"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                                City
-                              </label>
-                              <Input
-                                id="city"
-                                defaultValue="San Francisco"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                                State
-                              </label>
-                              <Input
-                                id="state"
-                                defaultValue="CA"
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">
-                                Zip Code
-                              </label>
-                              <Input
-                                id="zip"
-                                defaultValue="94107"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label htmlFor="businessDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                              Business Description
-                            </label>
-                            <textarea
-                              id="businessDescription"
-                              className="w-full rounded-md border border-gray-300 shadow-sm p-3 focus:outline-none focus:ring-primary focus:border-primary"
-                              rows={4}
-                              defaultValue="Professional automotive service center with certified mechanics specializing in routine maintenance, repairs, and diagnostics for all makes and models."
-                            ></textarea>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Specialties
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                  defaultChecked
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Oil Changes</span>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                  defaultChecked
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Brakes</span>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                  defaultChecked
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Tires</span>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Engine Repair</span>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Transmission</span>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Electrical</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="pt-4 border-t">
-                            <Button>Save Changes</Button>
-                          </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Business Description</label>
+                        <Textarea 
+                          placeholder="Describe your business and services..." 
+                          className="h-32"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="lg:w-1/2 space-y-2">
+                          <label className="text-sm font-medium">Address</label>
+                          <Input placeholder="Street Address" />
                         </div>
+                        <div className="lg:w-1/2 space-y-2">
+                          <label className="text-sm font-medium">City</label>
+                          <Input placeholder="City" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="lg:w-1/2 space-y-2">
+                          <label className="text-sm font-medium">Specialization</label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select specialization" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="general">General Maintenance</SelectItem>
+                              <SelectItem value="brakes">Brake Systems</SelectItem>
+                              <SelectItem value="engine">Engine Repair</SelectItem>
+                              <SelectItem value="electrical">Electrical Systems</SelectItem>
+                              <SelectItem value="body">Body Work</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="lg:w-1/2 space-y-2">
+                          <label className="text-sm font-medium">Years in Business</label>
+                          <Input type="number" placeholder="Years of experience" />
+                        </div>
+                      </div>
+                      
+                      <div className="pt-4">
+                        <Button>Save Changes</Button>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Bookings Tab */}
+              <TabsContent value="bookings" className={activeTab === "bookings" ? "block" : "hidden"}>
+                <h1 className="text-2xl font-bold mb-6">Manage Bookings</h1>
+                
+                {isLoading ? (
+                  <div className="flex justify-center p-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                   </div>
-                </div>
-              )}
-            </div>
+                ) : bookings.length > 0 ? (
+                  <div className="space-y-4">
+                    {bookings.map((booking, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-6">
+                          <div className="flex flex-col md:flex-row justify-between">
+                            <div>
+                              <h3 className="font-semibold text-lg">{booking.service?.name || "Service Appointment"}</h3>
+                              <p className="text-sm text-gray-500 mb-2">Customer: {booking.user?.name || "Unknown"}</p>
+                              <div className="flex gap-4 text-sm">
+                                <div>
+                                  <span className="font-medium">Date:</span> {new Date(booking.date).toLocaleDateString()}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Time:</span> {booking.timeSlot}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-4 md:mt-0 md:text-right">
+                              <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-2 ${
+                                booking.status === "confirmed" ? "bg-green-100 text-green-800" : 
+                                booking.status === "pending" ? "bg-yellow-100 text-yellow-800" : 
+                                booking.status === "completed" ? "bg-blue-100 text-blue-800" : 
+                                "bg-red-100 text-red-800"
+                              }`}>
+                                {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Unknown"}
+                              </div>
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="outline" size="sm">View Details</Button>
+                                {booking.status === "pending" && (
+                                  <Button size="sm">Confirm</Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Bookings Yet</h3>
+                    <p className="text-gray-500">You don't have any service bookings at the moment.</p>
+                  </div>
+                )}
+              </TabsContent>
+            </main>
           </div>
         </div>
       </div>
@@ -659,24 +393,5 @@ const ServiceProviderDashboard = () => {
     </div>
   );
 };
-
-// This is needed to render the icon in the service provider dashboard
-const Clock = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    className={className}
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10"></circle>
-    <polyline points="12 6 12 12 16 14"></polyline>
-  </svg>
-);
 
 export default ServiceProviderDashboard;

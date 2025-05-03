@@ -199,13 +199,16 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
-  // Convert user document to plain object to prevent sensitive data leakage
-  const userData = user.toObject ? user.toObject() : user;
-  
-  // Remove password field from response
-  if (userData.password) {
-    delete userData.password;
-  }
+  // Convert user document to plain object and ensure it's safe for client
+  const safeUserData = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar || undefined,
+    phone: user.phone || undefined,
+    createdAt: user.createdAt
+  };
 
   res
     .status(statusCode)
@@ -213,6 +216,6 @@ const sendTokenResponse = (user, statusCode, res) => {
     .json({
       success: true,
       token,
-      data: userData
+      data: safeUserData
     });
 };

@@ -54,7 +54,7 @@ const ServiceGrid: React.FC<ServiceGridProps> = ({ services: initialServices, is
         
         // Convert backend services to the format expected by components
         const formattedServices: ServiceType[] = backendServices.map(service => ({
-          id: service._id,
+          id: Number(service._id), // Convert string ID to number for type compatibility
           name: service.name,
           description: service.description,
           price: `$${service.price}`,

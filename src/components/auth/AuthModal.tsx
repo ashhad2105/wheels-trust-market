@@ -49,7 +49,7 @@ const AuthModal = () => {
       closeAuthModal();
     } catch (err: any) {
       console.error("Auth error:", err);
-      setError(err.response?.data?.error || "Authentication failed. Please try again.");
+      setError(err.response?.data?.error || err.message || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,4 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import AuthModal from "@/components/auth/AuthModal";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 
@@ -86,24 +84,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Get token and user data from response
         const { token, data: userData } = response.data;
         
-        if (!userData || !userData._id) {
-          throw new Error("Invalid user data received from server");
-        }
-        
         // Save token to localStorage
         localStorage.setItem('token', token);
         
-        setUser({
-          id: userData._id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role,
-          avatar: userData.avatar || undefined,
-          phone: userData.phone || undefined,
-          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        });
+        // Safely handle potentially missing data
+        const user = {
+          id: userData?._id || "unknown",
+          name: userData?.name || "Unknown User",
+          email: userData?.email || email,
+          role: (userData?.role as UserRole) || "user",
+          avatar: userData?.avatar,
+          phone: userData?.phone,
+          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
+        };
         
-        console.log("Logged in as:", userData);
+        setUser(user);
+        console.log("Logged in as:", user);
         
         toast({
           title: "Login Successful",
@@ -131,20 +127,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.data.success) {
         const { token, data: userData } = response.data;
         
-        if (!userData || !userData._id) {
-          throw new Error("Invalid user data received from server");
-        }
-        
         // Save token to localStorage
         localStorage.setItem('token', token);
         
-        setUser({
-          id: userData._id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role,
-          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        });
+        // Safely handle potentially missing data
+        const user = {
+          id: userData?._id || "unknown",
+          name: userData?.name || name,
+          email: userData?.email || email,
+          role: (userData?.role as UserRole) || "user",
+          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
+        };
+        
+        setUser(user);
         
         toast({
           title: "Registration Successful",
@@ -200,7 +195,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }}
     >
       {children}
-      <AuthModal />
     </AuthContext.Provider>
   );
 };

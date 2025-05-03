@@ -61,7 +61,7 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
         
         // Convert backend cars to the format expected by the components
         const formattedCars: CarType[] = backendCars.map(car => ({
-          id: car._id,
+          id: Number(car._id), // Convert string ID to number for type compatibility
           title: car.title || `${car.year} ${car.make} ${car.model}`,
           make: car.make,
           model: car.model,
@@ -78,7 +78,7 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
           // Add missing required properties from CarType
           color: "Not specified",
           image: car.images && car.images.length > 0 ? car.images[0] : "/placeholder.svg",
-          rating: 0,
+          rating: 4.5,
           reviewCount: 0,
           fuelType: "Not specified",
           transmission: "automatic",
