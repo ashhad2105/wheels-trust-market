@@ -27,6 +27,7 @@ interface ServiceProvider {
   phone: string;
   email: string;
   verified: boolean;
+  status: string;
   user: {
     _id: string;
     name: string;
@@ -49,17 +50,22 @@ const ServiceProviderManagement = () => {
   const fetchServiceProviders = async () => {
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+      
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
       
       if (response.data.success) {
-        setProviders(response.data.data.serviceProviders);
+        setProviders(response.data.data.serviceProviders || []);
       } else {
         setError("Failed to fetch service providers");
         toast({
@@ -81,23 +87,24 @@ const ServiceProviderManagement = () => {
     }
   };
 
-  const filteredProviders = providers.filter(provider => {
+  const filteredProviders = providers.length > 0 ? providers.filter(provider => {
     const searchLower = searchTerm.toLowerCase();
     return (
       provider.name.toLowerCase().includes(searchLower) ||
       provider.email.toLowerCase().includes(searchLower) ||
       (provider.specialties && provider.specialties.some(specialty => specialty.toLowerCase().includes(searchLower)))
     );
-  });
+  }) : [];
 
-  const handleProviderStatusChange = async (providerId: string, isVerified: boolean) => {
+  const handleProviderStatusChange = async (providerId: string, status: string) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${providerId}/verify`,
-        { isVerified },
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${providerId}/status`,
+        { status },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -105,13 +112,13 @@ const ServiceProviderManagement = () => {
       if (response.data.success) {
         setProviders(prevProviders => 
           prevProviders.map(provider => 
-            provider._id === providerId ? { ...provider, verified: isVerified } : provider
+            provider._id === providerId ? { ...provider, status } : provider
           )
         );
         
         toast({
           title: "Status Updated",
-          description: `Service provider status has been updated to ${isVerified ? 'verified' : 'unverified'}.`,
+          description: `Service provider status has been updated to ${status}.`,
         });
       } else {
         toast({
@@ -130,13 +137,55 @@ const ServiceProviderManagement = () => {
     }
   };
 
+  const handleVerificationChange = async (providerId: string, isVerified: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${providerId}/verify`,
+        { isVerified },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setProviders(prevProviders => 
+          prevProviders.map(provider => 
+            provider._id === providerId ? { ...provider, verified: isVerified } : provider
+          )
+        );
+        
+        toast({
+          title: "Verification Updated",
+          description: `Service provider is now ${isVerified ? 'verified' : 'unverified'}.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to update verification status",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error updating provider verification:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update verification status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteProvider = async (providerId: string) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.delete(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${providerId}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -197,13 +246,14 @@ const ServiceProviderManagement = () => {
               <TableHead>Location</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Verification</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
+                <TableCell colSpan={6} className="text-center py-10">
                   <div className="flex justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
@@ -211,7 +261,7 @@ const ServiceProviderManagement = () => {
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-destructive">
+                <TableCell colSpan={6} className="text-center py-8 text-destructive">
                   {error}. <Button variant="link" onClick={fetchServiceProviders}>Try again</Button>
                 </TableCell>
               </TableRow>
@@ -247,8 +297,36 @@ const ServiceProviderManagement = () => {
                   </TableCell>
                   <TableCell>
                     <Select 
-                      defaultValue={provider.verified ? "verified" : "pending"} 
-                      onValueChange={(value) => handleProviderStatusChange(provider._id, value === "verified")}
+                      value={provider.status || 'pending'} 
+                      onValueChange={(value) => handleProviderStatusChange(provider._id, value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active" className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Active
+                        </SelectItem>
+                        <SelectItem value="pending" className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-yellow-500" />
+                          Pending
+                        </SelectItem>
+                        <SelectItem value="inactive" className="flex items-center gap-2">
+                          <XCircle className="h-4 w-4 text-red-500" />
+                          Inactive
+                        </SelectItem>
+                        <SelectItem value="suspended" className="flex items-center gap-2">
+                          <XCircle className="h-4 w-4 text-red-500" />
+                          Suspended
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Select 
+                      value={provider.verified ? "verified" : "unverified"} 
+                      onValueChange={(value) => handleVerificationChange(provider._id, value === "verified")}
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
@@ -258,13 +336,9 @@ const ServiceProviderManagement = () => {
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           Verified
                         </SelectItem>
-                        <SelectItem value="pending" className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-yellow-500" />
-                          Pending
-                        </SelectItem>
-                        <SelectItem value="rejected" className="flex items-center gap-2">
+                        <SelectItem value="unverified" className="flex items-center gap-2">
                           <XCircle className="h-4 w-4 text-red-500" />
-                          Rejected
+                          Unverified
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -273,7 +347,7 @@ const ServiceProviderManagement = () => {
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/services/${provider._id}`}>
-                          <Eye className="h-4 w-4 mr-1" /> View
+                          <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button variant="outline" size="sm" asChild>
@@ -315,7 +389,7 @@ const ServiceProviderManagement = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No service providers found.
                 </TableCell>
               </TableRow>

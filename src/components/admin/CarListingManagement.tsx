@@ -13,16 +13,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface CarListing {
   _id: string;
+  title: string;
   make: string;
   model: string;
-  year: number;
-  price: number;
-  mileage: number;
+  year: string;
+  price: string;
+  mileage: string;
   condition: "Excellent" | "Good" | "Fair" | "Poor";
   location: string;
   description: string;
   images: string[];
-  userId: string;
+  seller: {
+    _id: string;
+    name: string;
+  };
   status: "active" | "pending" | "sold" | "inactive";
   createdAt: string;
 }
@@ -41,17 +45,22 @@ const CarListingManagement = () => {
   const fetchCarListings = async () => {
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
       
       if (response.data.success) {
-        setCarListings(response.data.data);
+        setCarListings(response.data.data.cars || []);
       } else {
         setError("Failed to fetch car listings");
         toast({
@@ -73,7 +82,7 @@ const CarListingManagement = () => {
     }
   };
 
-  const filteredCarListings = carListings.filter(car => {
+  const filteredCarListings = carListings.length > 0 ? carListings.filter(car => {
     const searchLower = searchTerm.toLowerCase();
     return (
       car.make.toLowerCase().includes(searchLower) ||
@@ -81,16 +90,17 @@ const CarListingManagement = () => {
       car.year.toString().includes(searchLower) ||
       car.location.toLowerCase().includes(searchLower)
     );
-  });
+  }) : [];
 
   const handleStatusChange = async (carId: string, status: string) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.patch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${carId}/status`,
         { status },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -125,11 +135,12 @@ const CarListingManagement = () => {
 
   const handleDeleteCar = async (carId: string) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.delete(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${carId}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -163,12 +174,12 @@ const CarListingManagement = () => {
     return date.toLocaleDateString();
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
-    }).format(price);
+    }).format(Number(price));
   };
 
   return (
@@ -237,7 +248,7 @@ const CarListingManagement = () => {
                       </div>
                       <div>
                         <div className="font-medium">{car.year} {car.make} {car.model}</div>
-                        <div className="text-sm text-gray-500">{car.mileage.toLocaleString()} miles</div>
+                        <div className="text-sm text-gray-500">{car.mileage} miles</div>
                       </div>
                     </div>
                   </TableCell>

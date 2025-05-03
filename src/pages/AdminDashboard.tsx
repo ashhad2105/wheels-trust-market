@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -20,6 +21,7 @@ import AdminNotifications from "@/components/admin/AdminNotifications";
 import UserManagement from "@/components/admin/UserManagement";
 import ServiceProviderManagement from "@/components/admin/ServiceProviderManagement";
 import CarListingManagement from "@/components/admin/CarListingManagement";
+import { Input } from "@/components/ui/input"; // Adding this import
 import axios from "axios";
 
 // Dashboard stats interface
@@ -42,32 +44,47 @@ const AdminDashboard = () => {
     totalRevenue: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDashboardStats();
+    // Get token from localStorage
+    const storedToken = localStorage.getItem('token');
+    setToken(storedToken);
+    
+    fetchDashboardStats(storedToken);
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = async (authToken: string | null) => {
+    if (!authToken) {
+      console.error("No auth token available");
+      toast({
+        title: "Authentication Error",
+        description: "Please login again to access the dashboard",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
       // Fetch user count
       const usersResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${authToken}`
         }
       });
       
       // Fetch car listings count
       const carsResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${authToken}`
         }
       });
       
       // Fetch service providers count
       const providersResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${authToken}`
         }
       });
       
@@ -102,6 +119,7 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     logout();
     toast({
       title: "Logged out",
