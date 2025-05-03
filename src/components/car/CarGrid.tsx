@@ -65,7 +65,7 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
           title: car.title || `${car.year} ${car.make} ${car.model}`,
           make: car.make,
           model: car.model,
-          year: car.year,
+          year: parseInt(car.year) || new Date().getFullYear(),
           price: parseFloat(car.price),
           mileage: parseInt(car.mileage),
           condition: car.condition,
@@ -74,7 +74,15 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
           images: car.images || [],
           seller: car.seller?.name || "Unknown",
           features: car.features || [],
-          status: car.status
+          status: car.status,
+          // Add missing required properties from CarType
+          color: "Not specified",
+          image: car.images && car.images.length > 0 ? car.images[0] : "/placeholder.svg",
+          rating: 0,
+          reviewCount: 0,
+          fuelType: "Not specified",
+          transmission: "automatic",
+          sellerType: "dealer"
         }));
         
         setCars(formattedCars);

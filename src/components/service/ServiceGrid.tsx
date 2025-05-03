@@ -57,8 +57,8 @@ const ServiceGrid: React.FC<ServiceGridProps> = ({ services: initialServices, is
           id: service._id,
           name: service.name,
           description: service.description,
-          price: service.price,
-          duration: service.duration,
+          price: `$${service.price}`,
+          duration: `${service.duration} minutes`,
           category: service.category,
           status: service.status,
           provider: {
@@ -67,7 +67,8 @@ const ServiceGrid: React.FC<ServiceGridProps> = ({ services: initialServices, is
             rating: 4.5, // Default rating if not available
             reviewCount: 0 // Default review count if not available
           },
-          image: "/placeholder.svg" // Default placeholder image
+          image: "/placeholder.svg", // Default placeholder image
+          rating: 4.5 // Add missing required property
         }));
         
         setServices(formattedServices);
