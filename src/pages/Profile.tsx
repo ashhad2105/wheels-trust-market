@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import axios from "axios";
 import { 
   User, 
   Settings, 
@@ -25,10 +26,12 @@ import {
   Key,
   Mail,
   Eye,
-  Bookmark
+  Bookmark,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserActivity {
   id: string;
@@ -38,13 +41,41 @@ interface UserActivity {
   image?: string;
 }
 
+interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  address: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
+  avatar?: string;
+  role: string;
+}
+
 const Profile = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, token, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: ""
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
   
-  // Mock user activity
+  // Mock user activity (would be replaced with real API data)
   const [userActivity] = useState<UserActivity[]>([
     {
       id: "1",
@@ -83,8 +114,62 @@ const Profile = () => {
     }
   });
   
+  // Fetch user profile from the backend
+  const fetchUserProfile = async () => {
+    if (!token || !user?.id) {
+      setProfileLoading(false);
+      return;
+    }
+    
+    try {
+      setProfileLoading(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      const userData = response.data.data;
+      setUserProfile(userData);
+      
+      // Split the name into first and last name (assuming format is "First Last")
+      const nameParts = userData.name ? userData.name.split(" ") : ["", ""];
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+      
+      setFormData({
+        firstName,
+        lastName,
+        email: userData.email || "",
+        phone: userData.phone || "",
+        address: userData.address ? 
+          `${userData.address.street || ""}
+${userData.address.city || ""}, ${userData.address.state || ""} ${userData.address.zipCode || ""}`.trim() : ""
+      });
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      toast({
+        title: "Failed to load profile",
+        description: "There was a problem loading your profile information.",
+        variant: "destructive"
+      });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+  
+  // Effect to fetch user profile on component mount if authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated, user]);
+  
   // Redirect if not logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAuthenticated) {
       navigate("/");
     }
@@ -94,23 +179,87 @@ const Profile = () => {
     return null; // Will be redirected
   }
 
-  const handleSaveProfile = () => {
+  // Handle input change for profile form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  // Handle input change for password form
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user?.id || !token) return;
+    
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Format the data for the API
+      const updatedProfile = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        address: {}
+      };
+      
+      // Parse address from textarea if provided
+      if (formData.address) {
+        const addressLines = formData.address.split('\n');
+        const streetAddress = addressLines[0] || '';
+        
+        let cityStateZip = '';
+        if (addressLines.length > 1) {
+          cityStateZip = addressLines[1] || '';
+        }
+        
+        // Try to parse city, state, zip
+        const cityStateZipMatch = cityStateZip.match(/([^,]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)?/);
+        
+        updatedProfile.address = {
+          street: streetAddress,
+          city: cityStateZipMatch?.[1] || '',
+          state: cityStateZipMatch?.[2] || '',
+          zipCode: cityStateZipMatch?.[3] || ''
+        };
+      }
+      
+      await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${user.id}`,
+        updatedProfile,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
       toast({
         title: "Profile updated",
         description: "Your profile information has been successfully updated."
       });
-    }, 1000);
+      
+      // Refresh user profile
+      fetchUserProfile();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your profile.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     setLoading(true);
     
-    // Simulate API call
+    // This would be implemented with a real API endpoint
+    // For now, we'll simulate an API call
     setTimeout(() => {
       setLoading(false);
       toast({
@@ -120,18 +269,124 @@ const Profile = () => {
     }, 1000);
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all password fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "New password and confirmation do not match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // This would connect to a real password update endpoint
+      // For demo purposes, we'll simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      
       toast({
         title: "Password updated",
         description: "Your password has been successfully changed."
       });
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your password.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.id || !token) return;
+    
+    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account has been successfully deleted."
+      });
+      
+      // Log the user out and redirect to home page
+      logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Delete failed",
+        description: "There was a problem deleting your account.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Loading state while profile is being fetched
+  if (profileLoading) {
+    return (
+      <>
+        <Helmet>
+          <title>My Profile | WheelsTrust</title>
+        </Helmet>
+        
+        <Navbar />
+        
+        <main className="pt-24 pb-16 min-h-screen">
+          <div className="container mx-auto px-4 flex justify-center items-center">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="mt-4 text-lg">Loading your profile...</p>
+            </div>
+          </div>
+        </main>
+        
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -147,7 +402,7 @@ const Profile = () => {
             <div className="flex items-center mb-8">
               <div className="w-16 h-16 bg-gray-200 rounded-full mr-4 overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop" 
+                  src={userProfile?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop"}
                   alt="Profile" 
                   className="w-full h-full object-cover"
                 />
@@ -193,33 +448,61 @@ const Profile = () => {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="firstName">First Name</Label>
-                              <Input id="firstName" defaultValue="John" />
+                              <Input 
+                                id="firstName" 
+                                value={formData.firstName}
+                                onChange={handleInputChange}
+                              />
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="lastName">Last Name</Label>
-                              <Input id="lastName" defaultValue="Doe" />
+                              <Input 
+                                id="lastName" 
+                                value={formData.lastName}
+                                onChange={handleInputChange}
+                              />
                             </div>
                           </div>
                           
                           <div className="space-y-2">
                             <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                            <Input 
+                              id="email" 
+                              type="email" 
+                              value={formData.email}
+                              onChange={handleInputChange}
+                            />
                           </div>
                           
                           <div className="space-y-2">
                             <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+                            <Input 
+                              id="phone" 
+                              type="tel" 
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                            />
                           </div>
                           
                           <div className="space-y-2">
                             <Label htmlFor="address">Address</Label>
-                            <Textarea id="address" defaultValue="123 Main Street, Apt 4B&#10;New York, NY 10001" />
+                            <Textarea 
+                              id="address" 
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              placeholder="Street Address&#10;City, State ZIP"
+                            />
                           </div>
                           
                           <div className="pt-2">
                             <Button type="submit" disabled={loading}>
-                              {loading ? "Saving..." : "Save Changes"}
+                              {loading ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : "Save Changes"}
                             </Button>
                           </div>
                         </div>
@@ -236,7 +519,7 @@ const Profile = () => {
                       <div className="flex items-center space-x-4">
                         <div className="w-24 h-24 rounded-full overflow-hidden">
                           <img 
-                            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=240&auto=format&fit=crop" 
+                            src={userProfile?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=240&auto=format&fit=crop"}
                             alt="Profile" 
                             className="w-full h-full object-cover"
                           />
@@ -363,7 +646,12 @@ const Profile = () => {
                           <div className="space-y-2">
                             <Label htmlFor="currentPassword">Current Password</Label>
                             <div className="relative">
-                              <Input id="currentPassword" type="password" />
+                              <Input 
+                                id="currentPassword" 
+                                type="password" 
+                                value={passwordData.currentPassword}
+                                onChange={handlePasswordChange}
+                              />
                               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             </div>
                           </div>
@@ -371,7 +659,12 @@ const Profile = () => {
                           <div className="space-y-2">
                             <Label htmlFor="newPassword">New Password</Label>
                             <div className="relative">
-                              <Input id="newPassword" type="password" />
+                              <Input 
+                                id="newPassword" 
+                                type="password"
+                                value={passwordData.newPassword}
+                                onChange={handlePasswordChange}
+                              />
                               <Key className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             </div>
                           </div>
@@ -379,14 +672,24 @@ const Profile = () => {
                           <div className="space-y-2">
                             <Label htmlFor="confirmPassword">Confirm New Password</Label>
                             <div className="relative">
-                              <Input id="confirmPassword" type="password" />
+                              <Input 
+                                id="confirmPassword" 
+                                type="password"
+                                value={passwordData.confirmPassword}
+                                onChange={handlePasswordChange}
+                              />
                               <Key className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             </div>
                           </div>
                           
                           <div className="pt-2">
                             <Button type="submit" disabled={loading}>
-                              {loading ? "Updating..." : "Update Password"}
+                              {loading ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Updating...
+                                </>
+                              ) : "Update Password"}
                             </Button>
                           </div>
                         </div>
@@ -445,7 +748,12 @@ const Profile = () => {
                         
                         <div className="pt-2">
                           <Button onClick={handleSaveSettings} disabled={loading}>
-                            {loading ? "Saving..." : "Save Settings"}
+                            {loading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                              </>
+                            ) : "Save Settings"}
                           </Button>
                         </div>
                       </div>
@@ -464,7 +772,18 @@ const Profile = () => {
                           <p className="text-sm text-gray-500 mb-3">
                             Permanently delete your account and all your data. This action cannot be undone.
                           </p>
-                          <Button variant="destructive">Delete My Account</Button>
+                          <Button 
+                            variant="destructive" 
+                            onClick={handleDeleteAccount}
+                            disabled={loading}
+                          >
+                            {loading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Deleting...
+                              </>
+                            ) : "Delete My Account"}
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -542,7 +861,12 @@ const Profile = () => {
                       
                       <div className="pt-2">
                         <Button onClick={handleSaveSettings} disabled={loading}>
-                          {loading ? "Saving..." : "Save Preferences"}
+                          {loading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Saving...
+                            </>
+                          ) : "Save Preferences"}
                         </Button>
                       </div>
                     </div>

@@ -1,199 +1,149 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import axios from "axios";
-import { useToast } from "@/hooks/use-toast";
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useToast } from "@/hooks/use-toast"
 
-export type UserRole = "user" | "admin" | "service_provider";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
-  phone?: string;
-  joinedDate?: string;
-};
-
-type AuthContextType = {
-  user: User | null;
+interface AuthContextType {
   isAuthenticated: boolean;
-  isAuthModalOpen: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
+  token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  openAuthModal: () => void;
-  closeAuthModal: () => void;
-  updateUser: (userData: Partial<User>) => void;
-};
+  register: (name: string, email: string, password: string) => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { toast } = useToast();
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<{ id: string; name: string; email: string; role: string; } | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const navigate = useNavigate();
+  const { toast } = useToast()
 
   useEffect(() => {
-    // Check if there's a stored token and fetch user data
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchUserData(token);
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      setIsAuthenticated(true);
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error);
+        logout();
+      }
     }
   }, []);
 
-  const fetchUserData = async (token: string) => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/me`, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.data.success) {
-        const userData = response.data.data;
-        setUser({
-          id: userData._id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role,
-          avatar: userData.avatar,
-          phone: userData.phone,
-          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        });
-        console.log("Fetched user data:", userData);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
       localStorage.removeItem('token');
     }
-  };
+  }, [token]);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`, 
-        { email, password }
-      );
-      
-      if (response.data.success) {
-        console.log("Login response:", response.data);
-        
-        // Get token and user data from response
-        const { token, data: userData } = response.data;
-        
-        // Save token to localStorage
-        localStorage.setItem('token', token);
-        
-        // Safely handle potentially missing data
-        const user = {
-          id: userData?._id || "unknown",
-          name: userData?.name || "Unknown User",
-          email: userData?.email || email,
-          role: (userData?.role as UserRole) || "user",
-          avatar: userData?.avatar,
-          phone: userData?.phone,
-          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        };
-        
-        setUser(user);
-        console.log("Logged in as:", user);
-        
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!"
-        });
-      }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast({
-        title: "Login Failed",
-        description: error.response?.data?.error || "Invalid credentials",
-        variant: "destructive"
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`, {
+        email,
+        password
       });
-      throw error;
+
+      const { token, user } = response.data;
+      setToken(token);
+      setIsAuthenticated(true);
+      setUser({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      });
+
+      localStorage.setItem('user', JSON.stringify({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${user.name}!`
+      })
+      navigate('/profile');
+    } catch (error: any) {
+      console.error("Login failed:", error.response?.data?.error || error.message);
+      toast({
+        title: "Login failed",
+        description: error.response?.data?.error || "Invalid credentials",
+        variant: "destructive",
+      })
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, 
-        { name, email, password }
-      );
-      
-      if (response.data.success) {
-        const { token, data: userData } = response.data;
-        
-        // Save token to localStorage
-        localStorage.setItem('token', token);
-        
-        // Safely handle potentially missing data
-        const user = {
-          id: userData?._id || "unknown",
-          name: userData?.name || name,
-          email: userData?.email || email,
-          role: (userData?.role as UserRole) || "user",
-          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        };
-        
-        setUser(user);
-        
-        toast({
-          title: "Registration Successful",
-          description: "Welcome to WheelsTrust!"
-        });
-      }
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Registration Failed",
-        description: error.response?.data?.error || "Could not create account",
-        variant: "destructive"
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, {
+        name,
+        email,
+        password
       });
-      throw error;
+
+      const { token, user } = response.data;
+      setToken(token);
+      setIsAuthenticated(true);
+      setUser({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      });
+
+      localStorage.setItem('user', JSON.stringify({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+
+      toast({
+        title: "Registration successful",
+        description: `Welcome, ${user.name}!`,
+      })
+      navigate('/profile');
+    } catch (error: any) {
+      console.error("Registration failed:", error.response?.data?.error || error.message);
+      toast({
+        title: "Registration failed",
+        description: error.response?.data?.error || "Please try again.",
+        variant: "destructive",
+      })
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    setIsAuthenticated(false);
     setUser(null);
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out"
-    });
-  };
-
-  const openAuthModal = () => {
-    setIsAuthModalOpen(true);
-  };
-
-  const closeAuthModal = () => {
-    setIsAuthModalOpen(false);
-  };
-
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      setUser({...user, ...userData});
-    }
+    setToken(null);
+    localStorage.removeItem('user');
+    navigate('/');
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isAuthModalOpen,
-        login,
-        register,
-        logout,
-        openAuthModal,
-        closeAuthModal,
-        updateUser,
-      }}
-    >
+    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
@@ -202,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
