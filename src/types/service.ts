@@ -2,7 +2,7 @@
 import { ServiceProviderType } from "./serviceProvider";
 
 export interface ServiceType {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: string;

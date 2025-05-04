@@ -8,4 +8,5 @@ export interface ServiceProviderType {
   location: string;
   specialties: string[];
   description: string;
+  verified?: boolean;
 }

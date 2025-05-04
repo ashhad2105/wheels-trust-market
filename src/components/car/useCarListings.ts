@@ -32,7 +32,7 @@ export const useCarListings = (initialCars?: CarType[], isPreview = false) => {
         
         // Convert backend cars to the format expected by the components
         const formattedCars: CarType[] = backendCars.map((car: any) => ({
-          id: car._id,
+          id: String(car._id || car.id),
           title: car.title || `${car.year} ${car.make} ${car.model}`,
           make: car.make,
           model: car.model,

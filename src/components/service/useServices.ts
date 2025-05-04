@@ -30,7 +30,7 @@ export const useServices = (initialServices?: ServiceType[], isPreview = false) 
         const backendServices = response.data.data || [];
         
         const formattedServices: ServiceType[] = backendServices.map((service: any) => ({
-          id: Number(service._id), 
+          id: service._id || String(service.id), 
           name: service.name,
           description: service.description,
           price: `$${service.price}`,
@@ -40,15 +40,16 @@ export const useServices = (initialServices?: ServiceType[], isPreview = false) 
           provider: {
             id: service.serviceProvider?._id || "",
             name: service.serviceProvider?.name || "Unknown Provider",
-            rating: 4.5,
-            reviewCount: 0,
-            image: "/placeholder.svg",
-            location: "Unknown Location",
-            specialties: [],
-            description: ""
+            rating: service.serviceProvider?.rating || 4.5,
+            reviewCount: service.serviceProvider?.reviewCount || 0,
+            image: service.serviceProvider?.image || "/placeholder.svg",
+            location: service.serviceProvider?.location || "Unknown Location",
+            specialties: service.serviceProvider?.specialties || [],
+            description: service.serviceProvider?.description || "",
+            verified: service.serviceProvider?.verified || false
           },
           image: service.image || "/placeholder.svg",
-          rating: 4.5
+          rating: service.rating || 4.5
         }));
         
         setServices(formattedServices);

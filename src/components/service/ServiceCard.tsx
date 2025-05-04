@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ServiceType } from "@/lib/data";
+import { ServiceType } from "@/types/service";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle } from "lucide-react";

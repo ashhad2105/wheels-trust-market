@@ -1,6 +1,6 @@
 
 export interface CarType {
-  id: string | number;
+  id: string;
   title: string;
   make: string;
   model: string;
