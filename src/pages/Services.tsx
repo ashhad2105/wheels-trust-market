@@ -26,7 +26,6 @@ const Services = () => {
             </p>
           </div>
           
-          {/* Use ServiceGrid without providing services - it will fetch them from API */}
           <ServiceGrid />
         </div>
       </main>

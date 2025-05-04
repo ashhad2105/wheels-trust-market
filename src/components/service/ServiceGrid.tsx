@@ -1,291 +1,47 @@
-<<<<<<< HEAD
-=======
 
->>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
-import React, { useState, useEffect } from "react";
-import { ServiceType } from "@/lib/data";
+import React from "react";
 import ServiceCard from "./ServiceCard";
 import ServiceFilters from "./ServiceFilters";
-import axios from "axios";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-<<<<<<< HEAD
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-
-interface Service {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-}
-
-interface ServiceProvider {
-  _id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  services: Service[];
-  status: string;
-  verified: boolean;
-  specialties: string[];
-  location: {
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-}
+import ServiceLoadingState from "./ServiceLoadingState";
+import ServiceErrorState from "./ServiceErrorState";
+import ServiceEmptyState from "./ServiceEmptyState";
+import { useServices } from "./useServices";
+import { ServiceType } from "@/types/service";
 
 interface ServiceGridProps {
   services?: ServiceType[];
   isPreview?: boolean;
 }
 
-const ServiceGrid: React.FC<ServiceGridProps> = ({ isPreview = false }) => {
-  const [providers, setProviders] = useState<ServiceProvider[]>([]);
-  const [filteredProviders, setFilteredProviders] = useState<ServiceProvider[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isPreview) {
-      fetchServiceProviders();
-    }
-  }, [isPreview]);
-
-  const fetchServiceProviders = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get<{ 
-        success: boolean; 
-        data: {
-          serviceProviders: ServiceProvider[];
-          pagination: {
-            total: number;
-            pages: number;
-            currentPage: number;
-            limit: number;
-          }
-        }
-      }>(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers`
-      );
-      
-      if (response.data.success && Array.isArray(response.data.data.serviceProviders)) {
-        const serviceProviders = response.data.data.serviceProviders;
-        setProviders(serviceProviders);
-        setFilteredProviders(serviceProviders);
-      } else {
-        const errorMessage = !response.data.success 
-          ? "Server returned unsuccessful response" 
-          : "Response data is not in the expected format";
-        setError(errorMessage);
-        toast({
-          title: "Error",
-          description: errorMessage,
-=======
-
-interface ServiceGridProps {
-  services?: ServiceType[]; // Optional as we'll fetch from backend if not provided
-  isPreview?: boolean;
-}
-
-interface BackendService {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: number;
-  category: string;
-  status: string;
-  serviceProvider: {
-    _id: string;
-    name: string;
-  };
-  createdAt: string;
-}
-
 const ServiceGrid: React.FC<ServiceGridProps> = ({ services: initialServices, isPreview = false }) => {
-  const [services, setServices] = useState<ServiceType[]>(initialServices || []);
-  const [filteredServices, setFilteredServices] = useState<ServiceType[]>(initialServices || []);
-  const [isLoading, setIsLoading] = useState<boolean>(!initialServices);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { 
+    services, 
+    filteredServices, 
+    setFilteredServices, 
+    isLoading, 
+    error, 
+    fetchServices 
+  } = useServices(initialServices, isPreview);
 
-  useEffect(() => {
-    if (!initialServices && !isPreview) {
-      fetchServices();
-    }
-  }, [initialServices, isPreview]);
-
-  const fetchServices = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services`
-      );
-      
-      console.log("Services API response:", response.data);
-
-      if (response.data.success) {
-        const backendServices: BackendService[] = response.data.data || [];
-        
-        // Convert backend services to the format expected by components
-        const formattedServices: ServiceType[] = backendServices.map(service => ({
-          id: Number(service._id), // Convert string ID to number for type compatibility
-          name: service.name,
-          description: service.description,
-          price: `$${service.price}`,
-          duration: `${service.duration} minutes`,
-          category: service.category,
-          status: service.status,
-          provider: {
-            id: service.serviceProvider?._id || "",
-            name: service.serviceProvider?.name || "Unknown Provider",
-            rating: 4.5, // Default rating if not available
-            reviewCount: 0 // Default review count if not available
-          },
-          image: "/placeholder.svg", // Default placeholder image
-          rating: 4.5 // Add missing required property
-        }));
-        
-        setServices(formattedServices);
-        setFilteredServices(formattedServices);
-      } else {
-        setError("Failed to fetch services");
-        toast({
-          title: "Error",
-          description: "Failed to fetch services",
->>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-<<<<<<< HEAD
-      console.error("Detailed error:", error);
-      const errorMessage = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.message
-        : "Failed to fetch service providers";
-      
-      setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-=======
-      console.error("Error fetching services:", error);
-      setError("Failed to fetch services");
-      toast({
-        title: "Error",
-        description: "Failed to fetch services. Please try again later.",
->>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-<<<<<<< HEAD
-  const handleViewDetails = (providerId: string) => {
-    navigate(`/services/${providerId}`);
-  };
-
-=======
->>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-<<<<<<< HEAD
-          <p className="text-muted-foreground">Loading service providers...</p>
-=======
-          <p className="text-muted-foreground">Loading services...</p>
->>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
-        </div>
-      </div>
-    );
+    return <ServiceLoadingState />;
   }
 
   if (error) {
-    return (
-      <div className="text-center py-10 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-medium mb-2 text-destructive">{error}</h3>
-        <p className="text-gray-600 mb-4">Please try again later</p>
-        <button 
-<<<<<<< HEAD
-          onClick={fetchServiceProviders}
-=======
-          onClick={fetchServices}
->>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    );
+    return <ServiceErrorState error={error} onRetry={fetchServices} />;
   }
 
   return (
     <div>
-      <ServiceFilters services={providers} onFilterChange={setFilteredProviders} />
+      <ServiceFilters services={services} onFilterChange={setFilteredServices} />
       
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProviders.map((provider) => (
-          <div 
-            key={provider._id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-          >
-            <img 
-              src={provider.image} 
-              alt={provider.name}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold mb-2">{provider.name}</h3>
-              <p className="text-gray-600 text-sm mb-2">{provider.description}</p>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-yellow-500">★</span>
-                <span>{provider.rating.toFixed(1)}</span>
-                <span className="text-gray-500">({provider.reviewCount} reviews)</span>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {provider.specialties.map((specialty, index) => (
-                  <span 
-                    key={index}
-                    className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded"
-                  >
-                    {specialty}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-2 text-sm text-gray-600 mb-4">
-                <p>{provider.location.city}, {provider.location.state}</p>
-              </div>
-              <Button 
-                onClick={() => handleViewDetails(provider._id)}
-                className="w-full"
-              >
-                View Details
-              </Button>
-            </div>
-          </div>
+        {filteredServices.map((service) => (
+          <ServiceCard key={service.id} service={service} />
         ))}
       </div>
       
-      {filteredProviders.length === 0 && (
-        <div className="text-center py-10 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium mb-2">No service providers found</h3>
-          <p className="text-gray-600">
-            Try adjusting your search criteria or filters
-          </p>
-        </div>
-      )}
+      {filteredServices.length === 0 && <ServiceEmptyState />}
     </div>
   );
 };
