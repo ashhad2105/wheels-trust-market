@@ -1,6 +1,8 @@
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -43,10 +45,22 @@ const UserSchema = new mongoose.Schema({
     state: String,
     zipCode: String
   },
+  avatar: {
+    type: String,
+    default: 'default-avatar.jpg'
+  },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+  emailVerificationToken: String,
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  lastLoginAt: Date
 });
 
 // Encrypt password using bcrypt
@@ -62,9 +76,27 @@ UserSchema.pre('save', async function(next) {
 UserSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
-  });
+  return jwt.sign(
+    { 
+      id: this._id,
+      name: this.name,
+      email: this.email,
+      role: this.role
+    }, 
+    process.env.JWT_SECRET, 
+    {
+      expiresIn: process.env.JWT_EXPIRE
+    }
+  );
 };
-module.exports = mongoose.model('User', UserSchema); 
+
+// Update last login timestamp
+UserSchema.methods.updateLastLogin = async function() {
+  this.lastLoginAt = Date.now();
+  await this.save();
+};
+
+module.exports = mongoose.model('User', UserSchema);

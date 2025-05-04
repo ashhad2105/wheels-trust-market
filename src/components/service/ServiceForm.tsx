@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ServiceFormProps {
   initialData?: {
-    id?: string;
+    _id?: string;
     name: string;
-    price: string;
-    duration: string;
+    price: number;
+    duration: number;
     description: string;
     category: string;
     status?: "active" | "inactive";
@@ -22,118 +21,109 @@ interface ServiceFormProps {
 }
 
 const ServiceForm: React.FC<ServiceFormProps> = ({ 
-  initialData = { 
-    name: "", 
-    price: "", 
-    duration: "", 
-    description: "", 
-    category: "" 
-  }, 
+  initialData, 
   onSubmit, 
   onCancel,
-  isEdit = false
+  isEdit = false 
 }) => {
-  const [formData, setFormData] = useState(initialData);
+  const [formData, setFormData] = useState({
+    name: initialData?.name || "",
+    price: initialData?.price || 0,
+    duration: initialData?.duration || 30,
+    description: initialData?.description || "",
+    category: initialData?.category || "maintenance",
+    status: initialData?.status || "active"
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "price" || name === "duration" ? Number(value) : value
+    }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate form
-    if (!formData.name || !formData.price || !formData.duration || !formData.category || !formData.description) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      onSubmit({
-        ...formData,
-        id: formData.id || Date.now().toString(),
-        status: formData.status || "active"
-      });
-      
-      setIsLoading(false);
-      
-      toast({
-        title: isEdit ? "Service Updated" : "Service Created",
-        description: isEdit 
-          ? "Your service has been updated successfully." 
-          : "Your service has been created successfully."
-      });
-      
-      if (!isEdit) {
-        // Reset form if it's a new service
-        setFormData({ 
-          name: "", 
-          price: "", 
-          duration: "", 
-          description: "", 
-          category: "" 
-        });
+
+    try {
+      // Validate form data
+      if (!formData.name || !formData.description || !formData.category) {
+        throw new Error("Please fill in all required fields");
       }
-    }, 1000);
+
+      if (formData.price <= 0) {
+        throw new Error("Price must be greater than 0");
+      }
+
+      if (formData.duration <= 0) {
+        throw new Error("Duration must be greater than 0");
+      }
+
+      // Submit the form
+      await onSubmit(formData);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit form",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Service Name</label>
-          <Input 
+          <label className="text-sm font-medium">Name *</label>
+          <Input
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="e.g. Brake Inspection"
+            placeholder="Service name"
+            required
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Price ($)</label>
-          <Input 
+          <label className="text-sm font-medium">Price *</label>
+          <Input
             name="price"
+            type="number"
             value={formData.price}
             onChange={handleChange}
-            placeholder="e.g. 49.99"
-            type="text"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            required
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Duration</label>
-          <Select 
-            value={formData.duration} 
-            onValueChange={(value) => handleSelectChange("duration", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select duration" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="15">15 minutes</SelectItem>
-              <SelectItem value="30">30 minutes</SelectItem>
-              <SelectItem value="45">45 minutes</SelectItem>
-              <SelectItem value="60">1 hour</SelectItem>
-              <SelectItem value="90">1.5 hours</SelectItem>
-              <SelectItem value="120">2 hours</SelectItem>
-            </SelectContent>
-          </Select>
+          <label className="text-sm font-medium">Duration (minutes) *</label>
+          <Input
+            name="duration"
+            type="number"
+            value={formData.duration}
+            onChange={handleChange}
+            placeholder="30"
+            min="1"
+            required
+          />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Category</label>
+          <label className="text-sm font-medium">Category *</label>
           <Select 
             value={formData.category} 
             onValueChange={(value) => handleSelectChange("category", value)}
@@ -150,13 +140,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           </Select>
         </div>
         <div className="md:col-span-2 space-y-2">
-          <label className="text-sm font-medium">Description</label>
+          <label className="text-sm font-medium">Description *</label>
           <Textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
             placeholder="Describe the service..."
             rows={3}
+            required
           />
         </div>
       </div>

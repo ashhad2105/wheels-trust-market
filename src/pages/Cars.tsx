@@ -4,11 +4,14 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CarGrid from "@/components/car/CarGrid";
 import AuthModal from "@/components/auth/AuthModal";
-import { cars } from "@/lib/data";
+import { Helmet } from "react-helmet-async";
 
 const Cars = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Browse Cars | WheelsTrust</title>
+      </Helmet>
       <Navbar />
       <main className="flex-grow pt-24 pb-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -23,7 +26,8 @@ const Cars = () => {
             </p>
           </div>
           
-          <CarGrid cars={cars} />
+          {/* Use CarGrid without providing cars - it will fetch them from the API */}
+          <CarGrid />
         </div>
       </main>
       <Footer />

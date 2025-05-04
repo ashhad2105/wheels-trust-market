@@ -1,5 +1,6 @@
 const { body, param, query } = require('express-validator');
 const ErrorResponse = require('../utils/errorResponse');
+const { validationResult } = require('express-validator');
 
 // Auth validators
 exports.validateRegister = [
@@ -180,17 +181,29 @@ exports.validateServiceProviderStatus = [
 
 // Booking validators
 exports.validateBooking = [
-  body('serviceProviderId')
+  body('serviceProvider')
     .notEmpty()
     .withMessage('Service provider ID is required')
     .isMongoId()
     .withMessage('Invalid service provider ID'),
   
-  body('serviceId')
+  body('services')
+    .isArray()
+    .withMessage('Services must be an array')
     .notEmpty()
-    .withMessage('Service ID is required')
-    .isMongoId()
-    .withMessage('Invalid service ID'),
+    .withMessage('At least one service is required'),
+  
+  body('services.*.name')
+    .notEmpty()
+    .withMessage('Service name is required'),
+  
+  body('services.*.price')
+    .notEmpty()
+    .withMessage('Service price is required')
+    .isFloat({ min: 0 })
+    .withMessage('Service price must be a positive number'),
+  
+  
   
   body('date')
     .notEmpty()
@@ -201,17 +214,17 @@ exports.validateBooking = [
   body('time')
     .notEmpty()
     .withMessage('Time is required')
-    .matches(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/)
-    .withMessage('Time must be in HH:MM format'),
+    .matches(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$/)
+    .withMessage('Time must be in HH:MM AM/PM format'),
   
-  body('notes')
-    .optional()
-    .isLength({ max: 500 })
-    .withMessage('Notes must be less than 500 characters')
-];
-
-exports.validateBookingStatus = [
+  body('totalPrice')
+    .notEmpty()
+    .withMessage('Total price is required')
+    .isFloat({ min: 0 })
+    .withMessage('Total price must be a positive number'),
+  
   body('status')
+    .optional()
     .isIn(['pending', 'confirmed', 'completed', 'cancelled'])
     .withMessage('Invalid status value')
 ];
@@ -241,7 +254,10 @@ exports.validateNotification = [
 exports.handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(new ErrorResponse(errors.array()[0].msg, 400));
+    return res.status(400).json({
+      success: false,
+      error: errors.array()[0].msg
+    });
   }
   next();
 }; 

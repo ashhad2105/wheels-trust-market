@@ -1,34 +1,42 @@
 export interface CarType {
-  id: number;
+  id: string;
+  title: string;
   make: string;
   model: string;
   year: number;
-  color: string;
-  mileage: number;
   price: number;
-  image: string;
-  description: string;
-  features: string[];
+  mileage: number;
+  condition: string;
   location: string;
+  description: string;
+  images: string[];
   seller: string;
+  features: string[];
+  status: string;
+  color: string;
+  image: string;
   rating: number;
   reviewCount: number;
-  title?: string;
-  condition?: string;
-  fuelType?: string;
-  transmission?: string;
-  sellerType?: 'dealer' | 'private';
+  fuelType: string;
+  transmission: string;
+  sellerType: string;
 }
 
 export interface ServiceType {
-  id: number;
+  id: string;
   name: string;
-  image: string;
   description: string;
   price: string;
-  provider: ServiceProviderType;
-  category: string;
   duration: string;
+  category: string;
+  status: string;
+  provider: {
+    id: string;
+    name: string;
+    rating: number;
+    reviewCount: number;
+  };
+  image: string;
   rating: number;
 }
 
@@ -46,86 +54,94 @@ export interface ServiceProviderType {
 
 export const cars: CarType[] = [
   {
-    id: 1,
+    id: "1",
+    title: "Toyota Camry 2021",
     make: "Toyota",
     model: "Camry",
     year: 2021,
-    color: "Silver",
-    mileage: 34000,
     price: 24500,
-    image: "/placeholder.svg",
+    mileage: 34000,
+    condition: "Excellent",
+    location: "New York, NY",
     description:
       "Reliable and fuel-efficient sedan, perfect for daily commutes.",
-    features: ["Automatic", "Bluetooth", "Backup Camera"],
-    location: "New York, NY",
+    images: [],
     seller: "John Doe",
+    features: ["Automatic", "Bluetooth", "Backup Camera"],
+    status: "",
+    color: "Silver",
+    image: "/placeholder.svg",
     rating: 4.5,
     reviewCount: 50,
-    title: "Toyota Camry 2021",
-    condition: "Excellent",
     fuelType: "Gasoline",
     transmission: "automatic",
     sellerType: "dealer",
   },
   {
-    id: 2,
+    id: "2",
+    title: "Honda Civic 2022",
     make: "Honda",
     model: "Civic",
     year: 2022,
-    color: "Blue",
-    mileage: 22000,
     price: 22000,
-    image: "/placeholder.svg",
-    description: "Compact and sporty, great for city driving.",
-    features: ["Sunroof", "Alloy Wheels", "Apple CarPlay"],
+    mileage: 22000,
+    condition: "Excellent",
     location: "Los Angeles, CA",
+    description: "Compact and sporty, great for city driving.",
+    images: [],
     seller: "Jane Smith",
+    features: ["Sunroof", "Alloy Wheels", "Apple CarPlay"],
+    status: "",
+    color: "Blue",
+    image: "/placeholder.svg",
     rating: 4.7,
     reviewCount: 75,
-    title: "Honda Civic 2022",
-    condition: "Excellent",
     fuelType: "Gasoline",
     transmission: "automatic",
     sellerType: "private",
   },
   {
-    id: 3,
+    id: "3",
+    title: "Ford F-150 2020",
     make: "Ford",
     model: "F-150",
     year: 2020,
-    color: "White",
-    mileage: 45000,
     price: 32000,
-    image: "/placeholder.svg",
-    description: "Powerful and versatile truck, ready for any job.",
-    features: ["4x4", "Towing Package", "Crew Cab"],
+    mileage: 45000,
+    condition: "Good",
     location: "Chicago, IL",
+    description: "Powerful and versatile truck, ready for any job.",
+    images: [],
     seller: "Mike Johnson",
+    features: ["4x4", "Towing Package", "Crew Cab"],
+    status: "",
+    color: "White",
+    image: "/placeholder.svg",
     rating: 4.3,
     reviewCount: 60,
-    title: "Ford F-150 2020",
-    condition: "Good",
     fuelType: "Diesel",
     transmission: "manual",
     sellerType: "dealer",
   },
   {
-    id: 4,
+    id: "4",
+    title: "Tesla Model 3 2023",
     make: "Tesla",
     model: "Model 3",
     year: 2023,
-    color: "Red",
-    mileage: 15000,
     price: 45000,
-    image: "/placeholder.svg",
-    description: "Electric and eco-friendly, with advanced technology.",
-    features: ["Autopilot", "Premium Interior", "Long Range"],
+    mileage: 15000,
+    condition: "Excellent",
     location: "Houston, TX",
+    description: "Electric and eco-friendly, with advanced technology.",
+    images: [],
     seller: "Emily Brown",
+    features: ["Autopilot", "Premium Interior", "Long Range"],
+    status: "",
+    color: "Red",
+    image: "/placeholder.svg",
     rating: 4.9,
     reviewCount: 90,
-    title: "Tesla Model 3 2023",
-    condition: "Excellent",
     fuelType: "Electric",
     transmission: "automatic",
     sellerType: "dealer",
@@ -239,47 +255,71 @@ export const serviceProviders: ServiceProviderType[] = [
 
 export const services: ServiceType[] = [
   {
-    id: 1,
+    id: "1",
     name: "Vehicle Inspection",
-    image: "/placeholder.svg",
     description: "Comprehensive pre-purchase inspection with detailed report",
     price: "$149",
-    provider: serviceProviders[3],
-    category: "Inspection",
     duration: "2 hours",
+    category: "Inspection",
+    status: "Completed",
+    provider: {
+      id: "4",
+      name: "Precision Auto Inspection",
+      rating: 4.9,
+      reviewCount: 105,
+    },
+    image: "/placeholder.svg",
     rating: 4.9,
   },
   {
-    id: 2,
+    id: "2",
     name: "Regular Maintenance",
-    image: "/placeholder.svg",
     description: "Oil change, filter replacement, and safety check",
     price: "$89",
-    provider: serviceProviders[0],
-    category: "Maintenance",
     duration: "1 hour",
+    category: "Maintenance",
+    status: "Completed",
+    provider: {
+      id: "1",
+      name: "Premium Auto Care",
+      rating: 4.9,
+      reviewCount: 120,
+    },
+    image: "/placeholder.svg",
     rating: 4.8,
   },
   {
-    id: 3,
+    id: "3",
     name: "Performance Tuning",
-    image: "/placeholder.svg",
     description: "Engine tuning and performance optimization",
     price: "$299",
-    provider: serviceProviders[1],
-    category: "Performance",
     duration: "3 hours",
+    category: "Performance",
+    status: "Completed",
+    provider: {
+      id: "2",
+      name: "Elite Automotive Solutions",
+      rating: 4.7,
+      reviewCount: 95,
+    },
+    image: "/placeholder.svg",
     rating: 4.7,
   },
   {
-    id: 4,
+    id: "4",
     name: "Brake System Service",
-    image: "/placeholder.svg",
     description: "Complete brake inspection and pad replacement",
     price: "$189",
-    provider: serviceProviders[2],
-    category: "Repair",
     duration: "2 hours",
+    category: "Repair",
+    status: "Completed",
+    provider: {
+      id: "3",
+      name: "Trusty Mechanics",
+      rating: 4.7,
+      reviewCount: 88,
+    },
+    image: "/placeholder.svg",
     rating: 4.8,
   },
 ];

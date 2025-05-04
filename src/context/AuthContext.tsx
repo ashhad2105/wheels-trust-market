@@ -1,6 +1,6 @@
-
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import AuthModal from "@/components/auth/AuthModal";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
 
 export type UserRole = "user" | "admin" | "service_provider";
 
@@ -31,63 +31,139 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { toast } = useToast();
 
-  // Mock login function - would connect to backend in real app
-  const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock user data based on email
-    if (email.includes("admin")) {
-      setUser({
-        id: "1",
-        name: "Admin User",
-        email,
-        role: "admin",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&auto=format&fit=crop&crop=face",
-        phone: "+1 (555) 123-4567",
-        joinedDate: "2023-01-15",
-      });
-    } else if (email.includes("service")) {
-      setUser({
-        id: "2",
-        name: "Service Provider",
-        email,
-        role: "service_provider",
-        avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=50&h=50&auto=format&fit=crop&crop=face",
-        phone: "+1 (555) 987-6543",
-        joinedDate: "2023-03-22",
-      });
-    } else {
-      setUser({
-        id: "3",
-        name: "Regular User",
-        email,
-        role: "user",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&h=50&auto=format&fit=crop&crop=face",
-        phone: "+1 (555) 456-7890",
-        joinedDate: "2023-05-10",
-      });
+  useEffect(() => {
+    // Check if there's a stored token and fetch user data
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserData(token);
+    }
+  }, []);
+
+  const fetchUserData = async (token: string) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/me`, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        const userData = response.data.data;
+        setUser({
+          id: userData._id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          avatar: userData.avatar,
+          phone: userData.phone,
+          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
+        });
+        console.log("Fetched user data:", userData);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      localStorage.removeItem('token');
     }
   };
 
-  // Mock registration function
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`, 
+        { email, password }
+      );
+      
+      if (response.data.success) {
+        console.log("Login response:", response.data);
+        
+        // Get token and user data from response
+        const { token, data: userData } = response.data;
+        
+        // Save token to localStorage
+        localStorage.setItem('token', token);
+        
+        // Safely handle potentially missing data
+        const user = {
+          id: userData?._id || "unknown",
+          name: userData?.name || "Unknown User",
+          email: userData?.email || email,
+          role: (userData?.role as UserRole) || "user",
+          avatar: userData?.avatar,
+          phone: userData?.phone,
+          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
+        };
+        
+        setUser(user);
+        console.log("Logged in as:", user);
+        
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!"
+        });
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login Failed",
+        description: error.response?.data?.error || "Invalid credentials",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   const register = async (name: string, email: string, password: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // Create a new user
-    setUser({
-      id: "3",
-      name,
-      email,
-      role: "user",
-      joinedDate: new Date().toISOString().split('T')[0],
-    });
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, 
+        { name, email, password }
+      );
+      
+      if (response.data.success) {
+        const { token, data: userData } = response.data;
+        
+        // Save token to localStorage
+        localStorage.setItem('token', token);
+        
+        // Safely handle potentially missing data
+        const user = {
+          id: userData?._id || "unknown",
+          name: userData?.name || name,
+          email: userData?.email || email,
+          role: (userData?.role as UserRole) || "user",
+          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
+        };
+        
+        setUser(user);
+        
+        toast({
+          title: "Registration Successful",
+          description: "Welcome to WheelsTrust!"
+        });
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration Failed",
+        description: error.response?.data?.error || "Could not create account",
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out"
+    });
   };
 
   const openAuthModal = () => {
@@ -119,7 +195,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }}
     >
       {children}
-      <AuthModal />
     </AuthContext.Provider>
   );
 };

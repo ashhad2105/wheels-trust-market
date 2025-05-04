@@ -13,51 +13,50 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-interface User {
+interface ServiceProvider {
   _id: string;
   name: string;
   email: string;
-  role: "user" | "service_provider" | "admin";
+  phone: string;
   status: "active" | "pending" | "inactive";
-  phone?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
+  services: string[];
+  rating: number;
+  reviewCount: number;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
   };
-  avatar?: string;
   createdAt: string;
 }
 
-const userFormSchema = z.object({
+const serviceProviderFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["user", "service_provider", "admin"]),
-  phone: z.string().optional(),
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
   address: z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    zipCode: z.string().optional(),
-  }).optional(),
+    street: z.string().min(1, "Street is required"),
+    city: z.string().min(1, "City is required"),
+    state: z.string().min(1, "State is required"),
+    zipCode: z.string().min(1, "Zip code is required"),
+  }),
 });
 
-const UserManagement = () => {
-  const [users, setUsers] = useState<User[]>([]);
+const ServiceProviderManagement = () => {
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editProvider, setEditProvider] = useState<ServiceProvider | null>(null);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof userFormSchema>>({
-    resolver: zodResolver(userFormSchema),
+  const form = useForm<z.infer<typeof serviceProviderFormSchema>>({
+    resolver: zodResolver(serviceProviderFormSchema),
     defaultValues: {
       name: "",
       email: "",
-      role: "user",
       phone: "",
       address: {
         street: "",
@@ -69,10 +68,10 @@ const UserManagement = () => {
   });
 
   useEffect(() => {
-    fetchUsers();
+    fetchProviders();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchProviders = async () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -81,7 +80,7 @@ const UserManagement = () => {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -90,21 +89,21 @@ const UserManagement = () => {
       );
 
       if (response.data.success) {
-        setUsers(response.data.data);
+        setProviders(response.data.data);
       } else {
-        setError("Failed to fetch users");
+        setError("Failed to fetch service providers");
         toast({
           title: "Error",
-          description: "Failed to fetch users",
+          description: "Failed to fetch service providers",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
-      setError("Failed to fetch users");
+      console.error("Error fetching service providers:", error);
+      setError("Failed to fetch service providers");
       toast({
         title: "Error",
-        description: "Failed to fetch users. Please try again later.",
+        description: "Failed to fetch service providers. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -112,7 +111,7 @@ const UserManagement = () => {
     }
   };
 
-  const handleAddUser = async (data: z.infer<typeof userFormSchema>) => {
+  const handleAddProvider = async (data: z.infer<typeof serviceProviderFormSchema>) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -120,7 +119,7 @@ const UserManagement = () => {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers`,
         data,
         {
           headers: {
@@ -130,26 +129,26 @@ const UserManagement = () => {
       );
 
       if (response.data.success) {
-        setUsers([...users, response.data.data]);
+        setProviders([...providers, response.data.data]);
         setIsAddDialogOpen(false);
         form.reset();
         toast({
           title: "Success",
-          description: "User added successfully",
+          description: "Service provider added successfully",
         });
       }
     } catch (error) {
-      console.error("Error adding user:", error);
+      console.error("Error adding service provider:", error);
       toast({
         title: "Error",
-        description: "Failed to add user. Please try again later.",
+        description: "Failed to add service provider. Please try again later.",
         variant: "destructive",
       });
     }
   };
 
-  const handleEditUser = async (data: z.infer<typeof userFormSchema>) => {
-    if (!editUser) return;
+  const handleEditProvider = async (data: z.infer<typeof serviceProviderFormSchema>) => {
+    if (!editProvider) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -158,7 +157,7 @@ const UserManagement = () => {
       }
 
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${editUser._id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${editProvider._id}`,
         data,
         {
           headers: {
@@ -168,27 +167,27 @@ const UserManagement = () => {
       );
 
       if (response.data.success) {
-        setUsers(users.map(user => 
-          user._id === editUser._id ? response.data.data : user
+        setProviders(providers.map(provider => 
+          provider._id === editProvider._id ? response.data.data : provider
         ));
-        setEditUser(null);
+        setEditProvider(null);
         form.reset();
         toast({
           title: "Success",
-          description: "User updated successfully",
+          description: "Service provider updated successfully",
         });
       }
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Error updating service provider:", error);
       toast({
         title: "Error",
-        description: "Failed to update user. Please try again later.",
+        description: "Failed to update service provider. Please try again later.",
         variant: "destructive",
       });
     }
   };
 
-  const handleDeleteUser = async (id: string) => {
+  const handleDeleteProvider = async (id: string) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -196,7 +195,7 @@ const UserManagement = () => {
       }
 
       const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -205,23 +204,23 @@ const UserManagement = () => {
       );
 
       if (response.data.success) {
-        setUsers(users.filter(user => user._id !== id));
+        setProviders(providers.filter(provider => provider._id !== id));
         toast({
           title: "Success",
-          description: "User deleted successfully",
+          description: "Service provider deleted successfully",
         });
       }
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting service provider:", error);
       toast({
         title: "Error",
-        description: "Failed to delete user. Please try again later.",
+        description: "Failed to delete service provider. Please try again later.",
         variant: "destructive",
       });
     }
   };
 
-  const handleUpdateUserStatus = async (id: string, status: "active" | "pending" | "inactive") => {
+  const handleUpdateProviderStatus = async (id: string, status: "active" | "pending" | "inactive") => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -229,7 +228,7 @@ const UserManagement = () => {
       }
 
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${id}/status`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/service-providers/${id}/status`,
         { status },
         {
           headers: {
@@ -239,30 +238,30 @@ const UserManagement = () => {
       );
 
       if (response.data.success) {
-        setUsers(users.map(user => 
-          user._id === id ? { ...user, status } : user
+        setProviders(providers.map(provider => 
+          provider._id === id ? { ...provider, status } : provider
         ));
         toast({
           title: "Success",
-          description: "User status updated successfully",
+          description: "Service provider status updated successfully",
         });
       }
     } catch (error) {
-      console.error("Error updating user status:", error);
+      console.error("Error updating service provider status:", error);
       toast({
         title: "Error",
-        description: "Failed to update user status. Please try again later.",
+        description: "Failed to update service provider status. Please try again later.",
         variant: "destructive",
       });
     }
   };
 
-  const filteredUsers = users.filter(user => {
+  const filteredProviders = providers.filter(provider => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      user.name.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower) ||
-      user.role.toLowerCase().includes(searchLower)
+      provider.name.toLowerCase().includes(searchLower) ||
+      provider.email.toLowerCase().includes(searchLower) ||
+      provider.phone.toLowerCase().includes(searchLower)
     );
   });
 
@@ -276,7 +275,7 @@ const UserManagement = () => {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search users..."
+            placeholder="Search providers..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -286,18 +285,18 @@ const UserManagement = () => {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add User
+              Add Provider
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
+              <DialogTitle>Add New Service Provider</DialogTitle>
               <DialogDescription>
-                Create a new user account with the following details.
+                Create a new service provider account with the following details.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAddUser)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(handleAddProvider)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -326,31 +325,77 @@ const UserManagement = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="role"
+                  name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="service_provider">Service Provider</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Address</h4>
+                  <FormField
+                    control={form.control}
+                    name="address.street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Street</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter street" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter city" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter state" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Zip Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter zip code" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">Add User</Button>
+                  <Button type="submit">Add Provider</Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -362,9 +407,9 @@ const UserManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Provider</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Rating</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
               <TableHead>Actions</TableHead>
@@ -382,35 +427,42 @@ const UserManagement = () => {
             ) : error ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-destructive">
-                  {error}. <Button variant="link" onClick={fetchUsers}>Try again</Button>
+                  {error}. <Button variant="link" onClick={fetchProviders}>Try again</Button>
                 </TableCell>
               </TableRow>
-            ) : filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user._id}>
+            ) : filteredProviders.length > 0 ? (
+              filteredProviders.map((provider) => (
+                <TableRow key={provider._id}>
                   <TableCell>
                     <div className="flex items-center">
                       <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                        {user.name.charAt(0).toUpperCase()}
+                        {provider.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.phone || "No phone"}</div>
+                        <div className="font-medium">{provider.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {provider.services.length} services
+                        </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {user.role === "admin" && "Admin"}
-                      {user.role === "service_provider" && "Service Provider"}
-                      {user.role === "user" && "Regular User"}
-                    </span>
+                    <div>{provider.email}</div>
+                    <div className="text-sm text-gray-500">{provider.phone}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <span className="text-yellow-500 mr-1">★</span>
+                      {provider.rating.toFixed(1)}
+                      <span className="text-gray-500 ml-1">
+                        ({provider.reviewCount} reviews)
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Select 
-                      defaultValue={user.status} 
-                      onValueChange={(value: "active" | "pending" | "inactive") => handleUpdateUserStatus(user._id, value)}
+                      defaultValue={provider.status} 
+                      onValueChange={(value: "active" | "pending" | "inactive") => handleUpdateProviderStatus(provider._id, value)}
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
@@ -431,20 +483,19 @@ const UserManagement = () => {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{formatDate(provider.createdAt)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          setEditUser(user);
+                          setEditProvider(provider);
                           form.reset({
-                            name: user.name,
-                            email: user.email,
-                            role: user.role,
-                            phone: user.phone,
-                            address: user.address,
+                            name: provider.name,
+                            email: provider.email,
+                            phone: provider.phone,
+                            address: provider.address,
                           });
                         }}
                       >
@@ -464,13 +515,13 @@ const UserManagement = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently delete the user "{user.name}". This action cannot be undone.
+                              This will permanently delete the service provider "{provider.name}". This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction 
-                              onClick={() => handleDeleteUser(user._id)}
+                              onClick={() => handleDeleteProvider(provider._id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               Delete
@@ -485,7 +536,7 @@ const UserManagement = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
-                  No users found
+                  No service providers found
                 </TableCell>
               </TableRow>
             )}
@@ -493,17 +544,17 @@ const UserManagement = () => {
         </Table>
       </div>
 
-      {/* Edit User Dialog */}
-      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+      {/* Edit Provider Dialog */}
+      <Dialog open={!!editProvider} onOpenChange={(open) => !open && setEditProvider(null)}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Edit Service Provider</DialogTitle>
             <DialogDescription>
-              Update user details below.
+              Update service provider details below.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleEditUser)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleEditProvider)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -532,31 +583,77 @@ const UserManagement = () => {
               />
               <FormField
                 control={form.control}
-                name="role"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="service_provider">Service Provider</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter phone number" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Address</h4>
+                <FormField
+                  control={form.control}
+                  name="address.street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Street</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter street" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter city" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter state" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.zipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zip Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter zip code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setEditUser(null)}>
+                <Button type="button" variant="outline" onClick={() => setEditProvider(null)}>
                   Cancel
                 </Button>
-                <Button type="submit">Update User</Button>
+                <Button type="submit">Update Provider</Button>
               </DialogFooter>
             </form>
           </Form>
@@ -566,4 +663,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default ServiceProviderManagement;

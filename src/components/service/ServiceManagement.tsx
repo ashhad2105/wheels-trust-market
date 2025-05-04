@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,88 +6,224 @@ import { Edit, Plus, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ServiceForm from "./ServiceForm";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import axios from "axios";
 
 interface Service {
-  id: string;
+  _id: string;
   name: string;
-  price: string;
-  duration: string;
+  price: number;
+  duration: number;
   description: string;
   category: string;
   status: "active" | "inactive";
+  serviceProvider: {
+    _id: string;
+    name: string;
+  };
 }
 
 const ServiceManagement: React.FC = () => {
-  const [services, setServices] = useState<Service[]>([
-    { 
-      id: "1", 
-      name: "Standard Oil Change", 
-      price: "$49.99", 
-      duration: "30", 
-      description: "Oil change with standard oil, filter replacement and fluid check.",
-      category: "maintenance",
-      status: "active" 
-    },
-    { 
-      id: "2", 
-      name: "Premium Oil Change", 
-      price: "$89.99", 
-      duration: "45", 
-      description: "Oil change with synthetic oil, filter replacement and comprehensive fluid check.",
-      category: "maintenance",
-      status: "active" 
-    },
-    { 
-      id: "3", 
-      name: "Tire Rotation", 
-      price: "$60.00", 
-      duration: "60", 
-      description: "Professional tire rotation to ensure even wear and extend tire life.",
-      category: "maintenance",
-      status: "active" 
-    },
-    { 
-      id: "4", 
-      name: "Brake Pad Replacement", 
-      price: "$180.00", 
-      duration: "120", 
-      description: "Front or rear brake pad replacement with quality parts.",
-      category: "repair",
-      status: "active" 
-    },
-  ]);
-
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editService, setEditService] = useState<Service | null>(null);
   const { toast } = useToast();
 
-  const handleAddService = (newService: Service) => {
-    setServices([...services, newService]);
-    setIsAddDialogOpen(false);
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services/provider`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setServices(response.data.data);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch services",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch services. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditService = (updatedService: Service) => {
-    setServices(services.map(service => 
-      service.id === updatedService.id ? updatedService : service
-    ));
-    setEditService(null);
+  const handleAddService = async (newService: Omit<Service, '_id' | 'serviceProvider'>) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services`,
+        newService,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setServices([...services, response.data.data]);
+        setIsAddDialogOpen(false);
+        toast({
+          title: "Success",
+          description: "Service added successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add service. Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteService = (id: string) => {
-    setServices(services.filter(service => service.id !== id));
-    toast({
-      title: "Service Deleted",
-      description: "The service has been deleted successfully."
-    });
+  const handleEditService = async (updatedService: Service) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services/${updatedService._id}`,
+        updatedService,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setServices(services.map(service => 
+          service._id === updatedService._id ? response.data.data : service
+        ));
+        setEditService(null);
+        toast({
+          title: "Success",
+          description: "Service updated successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update service. Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleToggleStatus = (id: string) => {
-    setServices(services.map(service => 
-      service.id === id 
-        ? { ...service, status: service.status === "active" ? "inactive" : "active" } 
-        : service
-    ));
+  const handleDeleteService = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setServices(services.filter(service => service._id !== id));
+        toast({
+          title: "Success",
+          description: "Service deleted successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete service. Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
+
+  const handleToggleStatus = async (id: string, currentStatus: "active" | "inactive") => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services/${id}/status`,
+        { status: currentStatus === "active" ? "inactive" : "active" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setServices(services.map(service => 
+          service._id === id 
+            ? { ...service, status: currentStatus === "active" ? "inactive" : "active" } 
+            : service
+        ));
+        toast({
+          title: "Success",
+          description: `Service ${currentStatus === "active" ? "deactivated" : "activated"} successfully`,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling service status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update service status. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="flex flex-col items-center gap-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading services...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -112,7 +247,6 @@ const ServiceManagement: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Edit service dialog */}
       <Dialog open={!!editService} onOpenChange={(open) => !open && setEditService(null)}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -134,7 +268,7 @@ const ServiceManagement: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {services.map((service) => (
-          <Card key={service.id} className={service.status === "inactive" ? "opacity-70" : ""}>
+          <Card key={service._id} className={service.status === "inactive" ? "opacity-70" : ""}>
             <CardHeader className="bg-gray-50">
               <div className="flex justify-between items-start">
                 <div>
@@ -165,7 +299,7 @@ const ServiceManagement: React.FC = () => {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction 
-                          onClick={() => handleDeleteService(service.id)}
+                          onClick={() => handleDeleteService(service._id)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Delete
@@ -180,14 +314,14 @@ const ServiceManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                   <p className="text-sm text-gray-500">Price</p>
-                  <p className="font-medium">{service.price}</p>
+                  <p className="font-medium">${service.price}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Duration</p>
                   <p className="font-medium">
-                    {parseInt(service.duration) < 60 
+                    {service.duration < 60 
                       ? `${service.duration} minutes` 
-                      : `${Math.floor(parseInt(service.duration) / 60)} hour${parseInt(service.duration) >= 120 ? 's' : ''} ${parseInt(service.duration) % 60 > 0 ? `${parseInt(service.duration) % 60} minutes` : ''}`
+                      : `${Math.floor(service.duration / 60)} hour${service.duration >= 120 ? 's' : ''} ${service.duration % 60 > 0 ? `${service.duration % 60} minutes` : ''}`
                     }
                   </p>
                 </div>
@@ -202,7 +336,7 @@ const ServiceManagement: React.FC = () => {
                       variant="ghost" 
                       size="sm" 
                       className="ml-2 text-xs h-6"
-                      onClick={() => handleToggleStatus(service.id)}
+                      onClick={() => handleToggleStatus(service._id, service.status)}
                     >
                       {service.status === "active" ? "Deactivate" : "Activate"}
                     </Button>

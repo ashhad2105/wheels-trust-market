@@ -1,14 +1,17 @@
 
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ServiceGrid from "@/components/service/ServiceGrid";
 import AuthModal from "@/components/auth/AuthModal";
-import { services } from "@/lib/data";
 
 const Services = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Vehicle Services | WheelsTrust</title>
+      </Helmet>
       <Navbar />
       <main className="flex-grow pt-24 pb-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -23,7 +26,8 @@ const Services = () => {
             </p>
           </div>
           
-          <ServiceGrid services={services} />
+          {/* Use ServiceGrid without providing services - it will fetch them from API */}
+          <ServiceGrid />
         </div>
       </main>
       <Footer />

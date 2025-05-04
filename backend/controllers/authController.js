@@ -1,3 +1,4 @@
+
 const User = require('../models/User');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errorResponse');
@@ -198,11 +199,23 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
+  // Convert user document to plain object and ensure it's safe for client
+  const safeUserData = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar || undefined,
+    phone: user.phone || undefined,
+    createdAt: user.createdAt
+  };
+
   res
     .status(statusCode)
     .cookie('token', token, options)
     .json({
       success: true,
-      token
+      token,
+      data: safeUserData
     });
-}; 
+};

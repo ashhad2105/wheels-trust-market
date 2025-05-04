@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { CarType } from "@/lib/data";
 import CarCard from "@/components/car/CarCard";
+import CarGrid from "@/components/car/CarGrid";
 
 interface CarListingPreviewProps {
   cars: CarType[];
@@ -33,11 +34,8 @@ const CarListingPreview: React.FC<CarListingPreviewProps> = ({ cars }) => {
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {previewCars.map((car) => (
-            <CarCard key={car.id} car={car} />
-          ))}
-        </div>
+        {/* Use CarGrid component with isPreview flag */}
+        <CarGrid cars={previewCars} isPreview={true} />
         
         <div className="mt-12 bg-blue-50 rounded-xl p-8 grid md:grid-cols-2 gap-8 items-center">
           <div>
