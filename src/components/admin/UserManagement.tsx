@@ -374,8 +374,16 @@ const UserManagement = () => {
                 <TableRow key={user._id}>
                   <TableCell>
                     <div className="flex items-center">
-                      <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                        {user.name.charAt(0).toUpperCase()}
+                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                        {user.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt={user.name}
+                            className="h-full w-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span>{user.name.charAt(0).toUpperCase()}</span>
+                        )}
                       </div>
                       <div>
                         <div className="font-medium">{user.name}</div>
@@ -419,9 +427,9 @@ const UserManagement = () => {
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setSelectedUser(user);
@@ -449,7 +457,7 @@ const UserManagement = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => handleDeleteUser(user._id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
