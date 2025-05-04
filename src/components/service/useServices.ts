@@ -20,8 +20,16 @@ export const useServices = (initialServices?: ServiceType[], isPreview = false) 
   const fetchServices = async () => {
     setIsLoading(true);
     try {
+      // Add a timestamp to prevent caching
+      const timestamp = new Date().getTime();
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services`
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/services?t=${timestamp}`,
+        {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }
       );
       
       console.log("Services API response:", response.data);
@@ -31,12 +39,12 @@ export const useServices = (initialServices?: ServiceType[], isPreview = false) 
         
         const formattedServices: ServiceType[] = backendServices.map((service: any) => ({
           id: service._id || String(service.id), 
-          name: service.name,
-          description: service.description,
-          price: `$${service.price}`,
-          duration: `${service.duration} minutes`,
-          category: service.category,
-          status: service.status,
+          name: service.name || "Unnamed Service",
+          description: service.description || "No description available",
+          price: service.price ? `$${service.price}` : "Price not available",
+          duration: service.duration ? `${service.duration} minutes` : "Duration not specified",
+          category: service.category || "other",
+          status: service.status || "active",
           provider: {
             id: service.serviceProvider?._id || "",
             name: service.serviceProvider?.name || "Unknown Provider",
@@ -51,6 +59,8 @@ export const useServices = (initialServices?: ServiceType[], isPreview = false) 
           image: service.image || "/placeholder.svg",
           rating: service.rating || 4.5
         }));
+        
+        console.log("Formatted services:", formattedServices);
         
         setServices(formattedServices);
         setFilteredServices(formattedServices);

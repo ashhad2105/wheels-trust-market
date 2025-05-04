@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { ServiceType } from "@/lib/data";
+import { ServiceType } from "@/types/service";
 import ServiceCard from "@/components/service/ServiceCard";
 
 interface ServiceSectionProps {

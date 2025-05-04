@@ -1,31 +1,14 @@
+
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Search, Filter } from "lucide-react";
-
-interface ServiceProvider {
-  _id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  services: any[];
-  status: string;
-  verified: boolean;
-  specialties: string[];
-  location: {
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-}
+import { ServiceType } from "@/types/service";
 
 interface ServiceFiltersProps {
-  services: ServiceProvider[];
-  onFilterChange: (filteredServices: ServiceProvider[]) => void;
+  services: ServiceType[];
+  onFilterChange: (filteredServices: ServiceType[]) => void;
 }
 
 const ServiceFilters: React.FC<ServiceFiltersProps> = ({ services, onFilterChange }) => {
@@ -43,28 +26,27 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({ services, onFilterChang
 
     if (searchTerm) {
       filtered = filtered.filter(
-        (provider) =>
-          provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          provider.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (service) =>
+          service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          service.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (location) {
       filtered = filtered.filter(
-        (provider) =>
-          provider.location.city.toLowerCase().includes(location.toLowerCase()) ||
-          provider.location.state.toLowerCase().includes(location.toLowerCase())
+        (service) =>
+          service.provider.location.toLowerCase().includes(location.toLowerCase())
       );
     }
 
     if (rating && rating !== "any") {
       const minRating = parseFloat(rating);
-      filtered = filtered.filter((provider) => provider.rating >= minRating);
+      filtered = filtered.filter((service) => service.rating >= minRating);
     }
 
     if (specialty && specialty !== "all") {
-      filtered = filtered.filter((provider) =>
-        provider.specialties.some((s) =>
+      filtered = filtered.filter((service) =>
+        service.provider.specialties.some((s) =>
           s.toLowerCase().includes(specialty.toLowerCase())
         )
       );
@@ -88,7 +70,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({ services, onFilterChang
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search service providers..."
+              placeholder="Search services..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -100,7 +82,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({ services, onFilterChang
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
               type="text"
-              placeholder="Location (city or state)"
+              placeholder="Location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="pl-10"
@@ -130,9 +112,9 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({ services, onFilterChang
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Specialties</SelectItem>
-              <SelectItem value="European Cars">European Cars</SelectItem>
-              <SelectItem value="Electrical Systems">Electrical Systems</SelectItem>
-              <SelectItem value="Diagnostics">Diagnostics</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="repair">Repair</SelectItem>
+              <SelectItem value="inspection">Inspection</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -152,4 +134,4 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({ services, onFilterChang
   );
 };
 
-export default ServiceFilters; 
+export default ServiceFilters;
