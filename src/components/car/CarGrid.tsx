@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
 import React, { useState, useEffect } from "react";
 import { CarType } from "@/lib/data";
 import CarCard from "./CarCard";
@@ -22,10 +26,14 @@ interface BackendCar {
   condition: string;
   location: string;
   description: string;
+<<<<<<< HEAD
   images: Array<{
     url: string;
     publicId: string;
   }>;
+=======
+  images: string[];
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
   seller: {
     _id: string;
     name: string;
@@ -33,10 +41,13 @@ interface BackendCar {
   status: string;
   createdAt: string;
   features?: string[];
+<<<<<<< HEAD
   exteriorColor?: string;
   interiorColor?: string;
   fuelType?: string;
   transmission?: string;
+=======
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
 }
 
 const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false }) => {
@@ -67,7 +78,11 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
         
         // Convert backend cars to the format expected by the components
         const formattedCars: CarType[] = backendCars.map(car => ({
+<<<<<<< HEAD
           id: car._id,
+=======
+          id: Number(car._id), // Convert string ID to number for type compatibility
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
           title: car.title || `${car.year} ${car.make} ${car.model}`,
           make: car.make,
           model: car.model,
@@ -77,6 +92,7 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
           condition: car.condition,
           location: car.location,
           description: car.description,
+<<<<<<< HEAD
           // Handle images - map Cloudinary URLs
           images: car.images?.map(img => img.url) || [],
           // Use first image as main image or fallback to placeholder
@@ -91,6 +107,20 @@ const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars, isPreview = false 
           fuelType: car.fuelType || "Not specified",
           transmission: car.transmission?.toLowerCase() === 'manual' ? 'manual' : 'automatic',
           sellerType: "private" // Default to private seller
+=======
+          images: car.images || [],
+          seller: car.seller?.name || "Unknown",
+          features: car.features || [],
+          status: car.status,
+          // Add missing required properties from CarType
+          color: "Not specified",
+          image: car.images && car.images.length > 0 ? car.images[0] : "/placeholder.svg",
+          rating: 4.5,
+          reviewCount: 0,
+          fuelType: "Not specified",
+          transmission: "automatic",
+          sellerType: "dealer"
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
         }));
         
         setCars(formattedCars);

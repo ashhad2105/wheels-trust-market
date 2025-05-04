@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,12 +74,62 @@ const CarListingManagement = () => {
 
   const fetchListings = async () => {
     setIsLoading(true);
+=======
+
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Search, Plus, Edit, Trash, Eye } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+import { Link } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface CarListing {
+  _id: string;
+  title: string;
+  make: string;
+  model: string;
+  year: string;
+  price: string;
+  mileage: string;
+  condition: "Excellent" | "Good" | "Fair" | "Poor";
+  location: string;
+  description: string;
+  images: string[];
+  seller: {
+    _id: string;
+    name: string;
+  };
+  status: "active" | "pending" | "sold" | "inactive";
+  createdAt: string;
+}
+
+const CarListingManagement = () => {
+  const [carListings, setCarListings] = useState<CarListing[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchCarListings();
+  }, []);
+
+  const fetchCarListings = async () => {
+    setIsLoading(true);
+    setError(null);
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('No auth token found');
       }
 
+<<<<<<< HEAD
       console.log('Fetching car listings from:', `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars`);
       
       const response = await axios.get<{ 
@@ -93,6 +144,9 @@ const CarListingManagement = () => {
           }
         }
       }>(
+=======
+      const response = await axios.get(
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars`,
         {
           headers: {
@@ -100,6 +154,7 @@ const CarListingManagement = () => {
           }
         }
       );
+<<<<<<< HEAD
 
       console.log('API Response:', response.data);
 
@@ -109,6 +164,21 @@ const CarListingManagement = () => {
         console.error('Invalid response format:', response.data);
         setError("Failed to fetch car listings");
         setListings([]);
+=======
+      
+      console.log("Car listings response:", response.data);
+      
+      if (response.data.success) {
+        // Check if data.cars exists (for pagination structure) or use data directly
+        const cars = response.data.data.cars || response.data.data || [];
+        setCarListings(cars);
+        
+        if (cars.length === 0) {
+          console.log("No car listings found in response");
+        }
+      } else {
+        setError("Failed to fetch car listings");
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
         toast({
           title: "Error",
           description: "Failed to fetch car listings",
@@ -118,7 +188,10 @@ const CarListingManagement = () => {
     } catch (error) {
       console.error("Error fetching car listings:", error);
       setError("Failed to fetch car listings");
+<<<<<<< HEAD
       setListings([]);
+=======
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
       toast({
         title: "Error",
         description: "Failed to fetch car listings. Please try again later.",
@@ -129,6 +202,7 @@ const CarListingManagement = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleAddListing = async (data: z.infer<typeof carListingFormSchema>) => {
     try {
       const token = localStorage.getItem('token');
@@ -257,10 +331,33 @@ const CarListingManagement = () => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
+=======
+  const filteredCarListings = carListings.filter(car => {
+    if (!car) return false;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      car.make?.toLowerCase().includes(searchLower) ||
+      car.model?.toLowerCase().includes(searchLower) ||
+      car.year?.toString().includes(searchLower) ||
+      car.location?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleStatusChange = async (carId: string, status: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${carId}/status`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
           }
         }
       );
 
+<<<<<<< HEAD
       console.log('Status update response:', response.data);
 
       if (response.data.success) {
@@ -298,11 +395,37 @@ const CarListingManagement = () => {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to update car listing status. Please try again later.",
+=======
+      if (response.data.success) {
+        setCarListings(prevCars => 
+          prevCars.map(car => 
+            car._id === carId ? { ...car, status: status as CarListing['status'] } : car
+          )
+        );
+        
+        toast({
+          title: "Status Updated",
+          description: `Car listing status has been updated to ${status}.`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to update status",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error updating car status:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update status",
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
         variant: "destructive",
       });
     }
   };
 
+<<<<<<< HEAD
   const filteredListings = Array.isArray(listings) ? listings.filter(listing => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -321,6 +444,57 @@ const CarListingManagement = () => {
       style: 'currency',
       currency: 'USD',
     }).format(price);
+=======
+  const handleDeleteCar = async (carId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${carId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setCarListings(carListings.filter(car => car._id !== carId));
+        
+        toast({
+          title: "Car Listing Deleted",
+          description: "Car listing has been removed successfully.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.error || "Failed to delete car listing",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error deleting car listing:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to delete car listing",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? "Invalid date" : date.toLocaleDateString();
+  };
+
+  const formatPrice = (price: string) => {
+    if (!price) return "N/A";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(Number(price));
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
   };
 
   return (
@@ -329,12 +503,17 @@ const CarListingManagement = () => {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
+<<<<<<< HEAD
             placeholder="Search listings..."
+=======
+            placeholder="Search cars..."
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+<<<<<<< HEAD
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -482,6 +661,14 @@ const CarListingManagement = () => {
             </Form>
           </DialogContent>
         </Dialog>
+=======
+        <Link to="/cars/sell">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Car Listing
+          </Button>
+        </Link>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
       </div>
 
       <div className="rounded-md border">
@@ -489,17 +676,29 @@ const CarListingManagement = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Car</TableHead>
+<<<<<<< HEAD
               <TableHead>Seller</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Posted</TableHead>
+=======
+              <TableHead>Price</TableHead>
+              <TableHead>Condition</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Listed</TableHead>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
+<<<<<<< HEAD
                 <TableCell colSpan={6} className="text-center py-10">
+=======
+                <TableCell colSpan={7} className="text-center py-10">
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                   <div className="flex justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
@@ -507,6 +706,7 @@ const CarListingManagement = () => {
               </TableRow>
             ) : error ? (
               <TableRow>
+<<<<<<< HEAD
                 <TableCell colSpan={6} className="text-center py-8 text-destructive">
                   {error}. <Button variant="link" onClick={fetchListings}>Try again</Button>
                 </TableCell>
@@ -560,10 +760,70 @@ const CarListingManagement = () => {
                         <SelectItem value="sold" className="flex items-center gap-2">
                           <XCircle className="h-4 w-4 text-red-500" />
                           Sold
+=======
+                <TableCell colSpan={7} className="text-center py-8 text-destructive">
+                  {error}. <Button variant="link" onClick={fetchCarListings}>Try again</Button>
+                </TableCell>
+              </TableRow>
+            ) : filteredCarListings.length > 0 ? (
+              filteredCarListings.map((car) => (
+                <TableRow key={car._id}>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <div className="h-10 w-16 bg-gray-100 rounded flex items-center justify-center mr-3 overflow-hidden">
+                        {car.images && car.images.length > 0 ? (
+                          <img 
+                            src={car.images[0]} 
+                            alt={`${car.make} ${car.model}`}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-400 text-xs">No image</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium">{car.year} {car.make} {car.model}</div>
+                        <div className="text-sm text-gray-500">{car.mileage} miles</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{formatPrice(car.price)}</TableCell>
+                  <TableCell>{car.condition}</TableCell>
+                  <TableCell>{car.location}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={car.status}
+                      onValueChange={(value) => handleStatusChange(car._id, value)}
+                    >
+                      <SelectTrigger className="h-8 w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span> Active
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="pending">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span> Pending
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="sold">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span> Sold
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="inactive">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span> Inactive
+                          </span>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
+<<<<<<< HEAD
                   <TableCell>{formatDate(listing.createdAt)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -585,6 +845,20 @@ const CarListingManagement = () => {
                         }}
                       >
                         <Edit className="h-4 w-4" />
+=======
+                  <TableCell>{formatDate(car.createdAt)}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/cars/details/${car._id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/cars/edit/${car._id}`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -598,15 +872,26 @@ const CarListingManagement = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
+<<<<<<< HEAD
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This will permanently delete the car listing for "{listing.make} {listing.model}". This action cannot be undone.
+=======
+                            <AlertDialogTitle>Delete Car Listing</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this {car.year} {car.make} {car.model}? This action cannot be undone.
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+<<<<<<< HEAD
                             <AlertDialogAction 
                               onClick={() => handleDeleteListing(listing._id)}
+=======
+                            <AlertDialogAction
+                              onClick={() => handleDeleteCar(car._id)}
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               Delete
@@ -620,14 +905,20 @@ const CarListingManagement = () => {
               ))
             ) : (
               <TableRow>
+<<<<<<< HEAD
                 <TableCell colSpan={6} className="text-center py-8">
                   No car listings found
+=======
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  No car listings found.
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
+<<<<<<< HEAD
 
       {/* Edit Listing Dialog */}
       <Dialog open={!!editListing} onOpenChange={(open) => !open && setEditListing(null)}>
@@ -771,6 +1062,8 @@ const CarListingManagement = () => {
           </Form>
         </DialogContent>
       </Dialog>
+=======
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
     </div>
   );
 };
