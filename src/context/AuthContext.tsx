@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -15,6 +16,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (name: string, email: string, password: string) => Promise<void>;
+  isAuthModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,8 +31,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: string; } | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast()
+
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -143,7 +151,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, register }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      user, 
+      token, 
+      login, 
+      logout, 
+      register, 
+      isAuthModalOpen,
+      openAuthModal,
+      closeAuthModal
+    }}>
       {children}
     </AuthContext.Provider>
   );
