@@ -20,5 +20,5 @@ export interface CarType {
   reviewCount: number;
   fuelType: string;
   transmission: string;
-  sellerType?: string;
+  sellerType: string; // Making this required to match lib/data.ts
 }

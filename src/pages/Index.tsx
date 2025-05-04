@@ -8,9 +8,22 @@ import CarListingPreview from "@/components/home/CarListingPreview";
 import ServiceSection from "@/components/home/ServiceSection";
 import Testimonials from "@/components/home/Testimonials";
 import AuthModal from "@/components/auth/AuthModal";
-import { cars, services } from "@/lib/data";
+import { cars, services as initialServices } from "@/lib/data";
+import { ServiceType } from "@/types/service";
 
 const Index = () => {
+  // Convert data.ts services to the correct ServiceType
+  const services: ServiceType[] = initialServices.map(service => ({
+    ...service,
+    provider: {
+      ...service.provider,
+      image: "/placeholder.svg",
+      location: "Local Area",
+      specialties: [],
+      description: "",
+    }
+  }));
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
