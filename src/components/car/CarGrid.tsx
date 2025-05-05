@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { CarType } from "@/lib/data";
 import CarCard from "./CarCard";
