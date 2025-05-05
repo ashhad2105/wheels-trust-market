@@ -28,7 +28,7 @@ export const useServices = (initialServices?: ServiceType[], isPreview = false) 
       console.log("Fetching service providers from:", apiUrl);
       
       const response = await axios.get(
-        `${apiUrl}/api/v1/service-providers?t=${timestamp}`,
+        `${apiUrl}/api/v1/service-providers`,
         {
           headers: {
             'Cache-Control': 'no-cache',
