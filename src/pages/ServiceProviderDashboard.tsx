@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
@@ -21,6 +20,7 @@ const ServiceProviderDashboard = () => {
   const [services, setServices] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [phoneNumber, setPhoneNumber] = useState(""); // Added phone state
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -66,12 +66,13 @@ const ServiceProviderDashboard = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    navigate("/");
+    logout(() => {
+      navigate("/");
+    });
   };
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (user?.role !== "service_provider") {
@@ -339,7 +340,11 @@ const ServiceProviderDashboard = () => {
                           </div>
                           <div className="lg:w-1/3 space-y-2">
                             <label className="text-sm font-medium">Phone</label>
-                            <Input defaultValue={user?.phone || ""} />
+                            <Input 
+                              value={phoneNumber} 
+                              onChange={(e) => setPhoneNumber(e.target.value)} 
+                              placeholder="Your phone number" 
+                            />
                           </div>
                         </div>
                         

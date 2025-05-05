@@ -1,8 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -13,9 +12,9 @@ interface AuthContextType {
     role: string;
   } | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, callback?: () => void) => Promise<void>;
+  logout: (callback?: () => void) => void;
+  register: (name: string, email: string, password: string, callback?: () => void) => Promise<void>;
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -32,8 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: string; } | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
@@ -63,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, callback?: () => void) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`, {
         email,
@@ -90,19 +88,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.name}!`
-      })
-      navigate('/profile');
+      });
+      
+      if (callback) {
+        callback();
+      }
     } catch (error: any) {
       console.error("Login failed:", error.response?.data?.error || error.message);
       toast({
         title: "Login failed",
         description: error.response?.data?.error || "Invalid credentials",
         variant: "destructive",
-      })
+      });
+      throw error;
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, callback?: () => void) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, {
         name,
@@ -130,24 +132,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast({
         title: "Registration successful",
         description: `Welcome, ${user.name}!`,
-      })
-      navigate('/profile');
+      });
+      
+      if (callback) {
+        callback();
+      }
     } catch (error: any) {
       console.error("Registration failed:", error.response?.data?.error || error.message);
       toast({
         title: "Registration failed",
         description: error.response?.data?.error || "Please try again.",
         variant: "destructive",
-      })
+      });
+      throw error;
     }
   };
 
-  const logout = () => {
+  const logout = (callback?: () => void) => {
     setIsAuthenticated(false);
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
-    navigate('/');
+    
+    if (callback) {
+      callback();
+    }
   };
 
   return (

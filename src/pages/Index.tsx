@@ -7,7 +7,6 @@ import Features from "@/components/home/Features";
 import CarListingPreview from "@/components/home/CarListingPreview";
 import ServiceSection from "@/components/home/ServiceSection";
 import Testimonials from "@/components/home/Testimonials";
-import AuthModal from "@/components/auth/AuthModal";
 import { cars, services as initialServices } from "@/lib/data";
 import { ServiceType } from "@/types/service";
 
@@ -33,7 +32,6 @@ const Index = () => {
         <CarListingPreview cars={cars} />
         <ServiceSection services={services} />
         <Testimonials />
-        <AuthModal />
       </main>
       <Footer />
     </div>
