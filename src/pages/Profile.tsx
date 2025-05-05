@@ -46,6 +46,14 @@ const Profile = () => {
   // Fetch user profile from the backend
   const fetchUserProfile = async () => {
     if (!token || !user?.id) {
+      // Create a placeholder profile if no user data is available
+      setUserProfile({
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: "",
+        address: {},
+        role: user?.role || "user"
+      });
       setProfileLoading(false);
       setFetchAttempted(true);
       return;
@@ -88,10 +96,11 @@ const Profile = () => {
   
   // Effect to fetch user profile on component mount if authenticated
   useEffect(() => {
-    if (isAuthenticated && user && !fetchAttempted) {
+    if (isAuthenticated && user) {
       fetchUserProfile();
     } else if (!isAuthenticated) {
       setProfileLoading(false);
+      setFetchAttempted(true);
     }
   }, [isAuthenticated, user]);
   

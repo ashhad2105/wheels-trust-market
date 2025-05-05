@@ -19,7 +19,7 @@ const ServiceSection: React.FC<ServiceSectionProps> = ({ services }) => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Vehicle Services</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">Service Providers</h2>
             <p className="text-gray-600 max-w-2xl">
               Connect with trusted service providers for routine maintenance, repairs, and
               inspections with transparent pricing and verified reviews.
@@ -27,7 +27,7 @@ const ServiceSection: React.FC<ServiceSectionProps> = ({ services }) => {
           </div>
           <Link to="/services">
             <Button variant="outline" className="mt-4 md:mt-0">
-              Browse All Services
+              Browse All Providers
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>

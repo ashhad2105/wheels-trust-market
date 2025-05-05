@@ -56,6 +56,15 @@ const CarsTab = () => {
             price: 22500,
             mileage: 15000,
             image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=120&h=80"
+          },
+          {
+            id: "mock-car-2",
+            make: "Toyota",
+            model: "Camry",
+            year: 2019,
+            price: 19800,
+            mileage: 25000,
+            image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=120&h=80"
           }
         ]);
       } finally {
@@ -76,7 +85,12 @@ const CarsTab = () => {
     }
     
     try {
-      // This would connect to a real car deletion endpoint
+      setLoading(true);
+      // In a real app, we would make an API call here
+      // await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${carId}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
+      
       // For demo purposes, we'll just remove it from the state
       setUserCars(userCars.filter(car => car.id !== carId));
       
@@ -90,6 +104,9 @@ const CarsTab = () => {
         description: "There was a problem deleting your car listing.",
         variant: "destructive"
       });
+      console.error("Error deleting car:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -104,7 +121,9 @@ const CarsTab = () => {
           <Button size="sm" onClick={() => navigate('/cars/sell')}>+ New Listing</Button>
         </div>
         
-        {userCars.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-6">Loading your cars...</div>
+        ) : userCars.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {userCars.map(car => (
               <div key={car.id} className="border border-gray-200 rounded-md overflow-hidden flex">
