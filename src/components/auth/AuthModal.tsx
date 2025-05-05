@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import Modal from "@/components/ui/modal";
 import { Mail, Key, Loader2, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const AuthModal = () => {
   const { isAuthModalOpen, closeAuthModal, login, register } = useAuth();
@@ -16,7 +16,6 @@ const AuthModal = () => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
@@ -42,14 +41,10 @@ const AuthModal = () => {
 
       if (isLogin) {
         console.log("Attempting login with:", { email, password });
-        await login(email, password, () => {
-          navigate('/profile');
-        });
+        await login(email, password);
       } else {
         console.log("Attempting registration with:", { name, email, password });
-        await register(name, email, password, () => {
-          navigate('/profile');
-        });
+        await register(name, email, password);
       }
       closeAuthModal();
     } catch (err: any) {

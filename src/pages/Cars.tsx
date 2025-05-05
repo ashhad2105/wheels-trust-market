@@ -26,6 +26,7 @@ const Cars = () => {
             </p>
           </div>
           
+          {/* Use CarGrid without providing cars - it will fetch them from the API */}
           <CarGrid />
         </div>
       </main>

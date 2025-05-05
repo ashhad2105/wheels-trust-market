@@ -1,73 +1,104 @@
-
 import React from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
-import { ServiceType } from "@/types/service";
+import { Button } from "@/components/ui/button";
+import { ServiceType } from "@/lib/data";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { CheckCircle } from "lucide-react";
 
 interface ServiceCardProps {
   service: ServiceType;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
+  const { isAuthenticated, openAuthModal } = useAuth();
+  const navigate = useNavigate();
+
+  const handleBookClick = () => {
+    if (!isAuthenticated) {
+      openAuthModal();
+    } else {
+      // In a real app, this would open a booking modal or redirect to a booking page
+      alert("Booking feature would open here");
+    }
+  };
+
+  const handleViewDetails = () => {
+    navigate(`/services/${service.id}`);
+  };
+
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg">
-      <div className="aspect-w-16 aspect-h-9 relative">
-        <img 
-          src={service.image || "/placeholder.svg"} 
-          alt={service.name} 
-          className="w-full h-56 object-cover"
+    <Card className="overflow-hidden hover-scale transition-all duration-300 shadow-md h-full flex flex-col">
+      <div className="relative">
+        <img
+          src={service.image}
+          alt={service.name}
+          className="w-full h-48 object-cover"
         />
-        {service.provider?.verified && (
-          <Badge variant="secondary" className="absolute top-2 right-2 flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" />
-            Verified
-          </Badge>
-        )}
+        <Badge
+          variant="default"
+          className="absolute top-3 right-3 bg-primary"
+        >
+          {service.category.charAt(0).toUpperCase() + service.category.slice(1)}
+        </Badge>
       </div>
       
-      <CardContent className="p-4">
-        <h3 className="text-xl font-semibold mb-2">{service.name}</h3>
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="font-bold text-lg mb-2">{service.name}</h3>
+        <p className="text-gray-600 text-sm mb-4 flex-grow">
+          {service.description}
+        </p>
         
-        <div className="flex items-center mb-3">
-          <Star className="h-4 w-4 text-yellow-500 mr-1" />
-          <span className="text-sm font-medium">{service.rating} </span>
-          <span className="text-sm text-gray-500 ml-1">({service.provider?.reviewCount || 0} reviews)</span>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <svg
+                key={i}
+                className={`h-4 w-4 ${
+                  i < Math.floor(service.rating) ? "text-yellow-400" : "text-gray-300"
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 15.585l-5.958 3.153 1.14-6.632L.36 7.368l6.652-.965L10 .585l2.988 5.818 6.652.965-4.822 4.738 1.14 6.632z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ))}
+            <span className="ml-1 text-sm text-gray-600">{service.rating}</span>
+          </div>
+          <span className="font-medium text-primary">{service.price}</span>
         </div>
         
-        {service.provider?.location && (
-          <div className="flex items-center text-gray-500 text-sm mb-3">
-            <MapPin className="h-4 w-4 mr-1" />
-            {service.provider.location}
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <img
+              src={service.provider.image}
+              alt={service.provider.name}
+              className="h-8 w-8 rounded-full"
+            />
+            <div>
+              <p className="text-sm font-medium flex items-center">
+                {service.provider.name}
+                {service.provider.verified && (
+                  <CheckCircle className="h-3 w-3 ml-1 text-green-600" />
+                )}
+              </p>
+              <p className="text-xs text-gray-500">{service.provider.location}</p>
+            </div>
           </div>
-        )}
+        </div>
         
-        <p className="text-gray-600 text-sm line-clamp-2 mb-3">{service.description}</p>
-        
-        {service.provider?.specialties && service.provider.specialties.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {service.provider.specialties.slice(0, 3).map((specialty, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {specialty}
-              </Badge>
-            ))}
-            {service.provider.specialties.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{service.provider.specialties.length - 3} more
-              </Badge>
-            )}
-          </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <span className="font-medium text-sm">{service.price}</span>
-        <Link to={`/services/${service.id}`}>
-          <Button size="sm">View Details</Button>
-        </Link>
-      </CardFooter>
+        <Button 
+          onClick={handleViewDetails}
+          className="w-full button-gradient text-white"
+        >
+          View Details
+        </Button>
+      </div>
     </Card>
   );
 };

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
+=======
 
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +34,32 @@ interface User {
   createdAt: string;
 }
 
+<<<<<<< HEAD
+const userFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["user", "service_provider", "admin"]),
+  phone: z.string().optional(),
+  address: z.object({
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
+  }).optional(),
+});
+
+const UserManagement = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof userFormSchema>>({
+    resolver: zodResolver(userFormSchema),
+=======
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
@@ -61,10 +90,23 @@ const UserManagement = () => {
 
   const editForm = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
     defaultValues: {
       name: "",
       email: "",
       role: "user",
+<<<<<<< HEAD
+      phone: "",
+      address: {
+        street: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      },
+    },
+  });
+
+=======
       status: "active",
     },
   });
@@ -84,10 +126,13 @@ const UserManagement = () => {
     },
   });
 
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
   useEffect(() => {
     fetchUsers();
   }, []);
 
+<<<<<<< HEAD
+=======
   useEffect(() => {
     if (selectedUser) {
       editForm.reset({
@@ -101,6 +146,7 @@ const UserManagement = () => {
     }
   }, [selectedUser]);
 
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
@@ -117,7 +163,11 @@ const UserManagement = () => {
           }
         }
       );
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
       if (response.data.success) {
         setUsers(response.data.data);
       } else {
@@ -141,7 +191,156 @@ const UserManagement = () => {
     }
   };
 
+<<<<<<< HEAD
+  const handleAddUser = async (data: z.infer<typeof userFormSchema>) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setUsers([...users, response.data.data]);
+        setIsAddDialogOpen(false);
+        form.reset();
+        toast({
+          title: "Success",
+          description: "User added successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add user. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditUser = async (data: z.infer<typeof userFormSchema>) => {
+    if (!editUser) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${editUser._id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setUsers(users.map(user => 
+          user._id === editUser._id ? response.data.data : user
+        ));
+        setEditUser(null);
+        form.reset();
+        toast({
+          title: "Success",
+          description: "User updated successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update user. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setUsers(users.filter(user => user._id !== id));
+        toast({
+          title: "Success",
+          description: "User deleted successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateUserStatus = async (id: string, status: "active" | "pending" | "inactive") => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/${id}/status`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setUsers(users.map(user => 
+          user._id === id ? { ...user, status } : user
+        ));
+        toast({
+          title: "Success",
+          description: "User status updated successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredUsers = users.filter(user => {
+=======
   const filteredUsers = users.filter((user) => {
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
     const searchLower = searchTerm.toLowerCase();
     return (
       user.name.toLowerCase().includes(searchLower) ||
@@ -150,6 +349,10 @@ const UserManagement = () => {
     );
   });
 
+<<<<<<< HEAD
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+=======
   const handleUpdateUserStatus = async (userId: string, status: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -323,6 +526,7 @@ const UserManagement = () => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString();
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
   };
 
   return (
@@ -337,10 +541,87 @@ const UserManagement = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+<<<<<<< HEAD
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account with the following details.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAddUser)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="service_provider">Service Provider</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Add User</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+=======
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add User
         </Button>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
       </div>
 
       <div className="rounded-md border">
@@ -348,6 +629,10 @@ const UserManagement = () => {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
+<<<<<<< HEAD
+              <TableHead>Email</TableHead>
+=======
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
@@ -357,7 +642,11 @@ const UserManagement = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
+<<<<<<< HEAD
+                <TableCell colSpan={6} className="text-center py-10">
+=======
                 <TableCell colSpan={5} className="text-center py-10">
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                   <div className="flex justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
@@ -365,13 +654,32 @@ const UserManagement = () => {
               </TableRow>
             ) : error ? (
               <TableRow>
+<<<<<<< HEAD
+                <TableCell colSpan={6} className="text-center py-8 text-destructive">
+=======
                 <TableCell colSpan={5} className="text-center py-8 text-destructive">
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                   {error}. <Button variant="link" onClick={fetchUsers}>Try again</Button>
                 </TableCell>
               </TableRow>
             ) : filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <TableRow key={user._id}>
+<<<<<<< HEAD
+                  <TableCell>
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium">{user.name}</div>
+                        <div className="text-sm text-gray-500">{user.phone || "No phone"}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+=======
                   <TableCell>
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
@@ -392,19 +700,21 @@ const UserManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      user.role === "admin" ? "bg-purple-100 text-purple-800" : 
-                      user.role === "service_provider" ? "bg-blue-100 text-blue-800" : 
-                      "bg-green-100 text-green-800"
-                    }`}>
-                      {user.role === "service_provider" ? "Service Provider" : 
-                        user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {user.role === "admin" && "Admin"}
+                      {user.role === "service_provider" && "Service Provider"}
+                      {user.role === "user" && "Regular User"}
                     </span>
                   </TableCell>
                   <TableCell>
                     <Select 
-                      value={user.status} 
+                      defaultValue={user.status} 
+<<<<<<< HEAD
+                      onValueChange={(value: "active" | "pending" | "inactive") => handleUpdateUserStatus(user._id, value)}
+=======
                       onValueChange={(value) => handleUpdateUserStatus(user._id, value)}
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
@@ -427,6 +737,21 @@ const UserManagement = () => {
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
+<<<<<<< HEAD
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setEditUser(user);
+                          form.reset({
+                            name: user.name,
+                            email: user.email,
+                            role: user.role,
+                            phone: user.phone,
+                            address: user.address,
+                          });
+=======
                     <div className="flex space-x-2">
                       <Button
                         variant="outline"
@@ -434,6 +759,7 @@ const UserManagement = () => {
                         onClick={() => {
                           setSelectedUser(user);
                           setIsEditDialogOpen(true);
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                         }}
                       >
                         <Edit className="h-4 w-4" />
@@ -450,14 +776,18 @@ const UserManagement = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User</AlertDialogTitle>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete {user.name}? This action cannot be undone.
+                              This will permanently delete the user "{user.name}". This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+<<<<<<< HEAD
+                            <AlertDialogAction 
+=======
                             <AlertDialogAction
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                               onClick={() => handleDeleteUser(user._id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
@@ -472,8 +802,13 @@ const UserManagement = () => {
               ))
             ) : (
               <TableRow>
+<<<<<<< HEAD
+                <TableCell colSpan={6} className="text-center py-8">
+                  No users found
+=======
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No users found.
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                 </TableCell>
               </TableRow>
             )}
@@ -482,48 +817,89 @@ const UserManagement = () => {
       </div>
 
       {/* Edit User Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+<<<<<<< HEAD
+      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user information. Click save when you're done.
+              Update user details below.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleEditUser)} className="space-y-4">
+              <FormField
+                control={form.control}
+=======
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user details and permissions.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
               <FormField
                 control={editForm.control}
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                 name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
+<<<<<<< HEAD
+                      <Input placeholder="Enter name" {...field} />
+=======
                       <Input {...field} />
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
+<<<<<<< HEAD
+                control={form.control}
+=======
                 control={editForm.control}
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                 name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+<<<<<<< HEAD
+                      <Input placeholder="Enter email" {...field} />
+=======
+                      <Input {...field} type="email" />
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
+<<<<<<< HEAD
+                control={form.control}
+=======
                 control={editForm.control}
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                 name="role"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
+<<<<<<< HEAD
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+=======
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -534,7 +910,8 @@ const UserManagement = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="user">Regular User</SelectItem>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
                         <SelectItem value="service_provider">Service Provider</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
@@ -543,6 +920,14 @@ const UserManagement = () => {
                   </FormItem>
                 )}
               />
+<<<<<<< HEAD
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditUser(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Update User</Button>
+              </DialogFooter>
+=======
               <FormField
                 control={editForm.control}
                 name="status"
@@ -581,12 +966,12 @@ const UserManagement = () => {
                   </FormItem>
                 )}
               />
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setIsEditDialogOpen(false)}>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit">Save Changes</Button>
-              </DialogFooter>
+              </div>
             </form>
           </Form>
         </DialogContent>
@@ -594,11 +979,11 @@ const UserManagement = () => {
 
       {/* Add User Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>
-              Create a new user with the following details.
+              Create a new user account with specific permissions.
             </DialogDescription>
           </DialogHeader>
           <Form {...addForm}>
@@ -623,7 +1008,7 @@ const UserManagement = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input {...field} type="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -636,7 +1021,7 @@ const UserManagement = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input {...field} type="password" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -658,7 +1043,7 @@ const UserManagement = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="user">Regular User</SelectItem>
                         <SelectItem value="service_provider">Service Provider</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
@@ -667,12 +1052,38 @@ const UserManagement = () => {
                   </FormItem>
                 )}
               />
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>
+              <FormField
+                control={addForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit">Create User</Button>
-              </DialogFooter>
+              </div>
+>>>>>>> 9709ca785318f820761c0b59825f07758c76ba62
             </form>
           </Form>
         </DialogContent>
