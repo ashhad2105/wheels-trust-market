@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,17 @@ const Navbar = () => {
   // Function to determine if a link is active
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  // Fix: Create proper event handler for logout button
+  const handleLogout = () => {
+    logout();
+  };
+
+  // Fix: Create proper event handler for mobile logout button
+  const handleMobileLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -139,7 +149,8 @@ const Navbar = () => {
                   </Button>
                 </Link>
               ) : null}
-              <Button size="sm" variant="ghost" onClick={logout}>
+              {/* Fix: Use the proper event handler */}
+              <Button size="sm" variant="ghost" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-1" />
                 Logout
               </Button>
@@ -259,10 +270,7 @@ const Navbar = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={handleMobileLogout}
                   className="w-full"
                 >
                   <LogOut className="h-4 w-4 mr-1" />

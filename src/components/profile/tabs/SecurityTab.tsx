@@ -3,25 +3,14 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Loader2, Lock, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import ProfileCard from "../ProfileCard";
 import axios from "axios";
 
-interface UserSettings {
-  privacy: {
-    showProfile: boolean;
-    showActivity: boolean;
-    allowMessaging: boolean;
-  };
-}
-
 const SecurityTab = () => {
   const { user, token, logout } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -29,34 +18,11 @@ const SecurityTab = () => {
     newPassword: "",
     confirmPassword: ""
   });
-  
-  // User settings state
-  const [userSettings, setUserSettings] = useState<UserSettings>({
-    privacy: {
-      showProfile: true,
-      showActivity: false,
-      allowMessaging: true,
-    }
-  });
 
   // Handle input change for password form
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setPasswordData(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleSaveSettings = async () => {
-    setLoading(true);
-    
-    // This would be implemented with a real API endpoint
-    // For now, we'll simulate an API call
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Settings updated",
-        description: "Your account settings have been successfully updated."
-      });
-    }, 1000);
   };
 
   const handleUpdatePassword = async () => {
@@ -139,9 +105,8 @@ const SecurityTab = () => {
         description: "Your account has been successfully deleted."
       });
       
-      // Log the user out and redirect to home page
+      // Log the user out
       logout();
-      navigate("/");
     } catch (error) {
       console.error("Error deleting account:", error);
       toast({
@@ -213,66 +178,6 @@ const SecurityTab = () => {
             </div>
           </div>
         </form>
-      </ProfileCard>
-      
-      <ProfileCard
-        title="Privacy Settings"
-        description="Control your privacy preferences."
-      >
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Public Profile</h4>
-              <p className="text-sm text-gray-500">Allow others to see your profile</p>
-            </div>
-            <Switch 
-              checked={userSettings.privacy.showProfile}
-              onCheckedChange={(checked) => setUserSettings({
-                ...userSettings,
-                privacy: { ...userSettings.privacy, showProfile: checked }
-              })}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Activity Visibility</h4>
-              <p className="text-sm text-gray-500">Show your activity to other users</p>
-            </div>
-            <Switch 
-              checked={userSettings.privacy.showActivity}
-              onCheckedChange={(checked) => setUserSettings({
-                ...userSettings,
-                privacy: { ...userSettings.privacy, showActivity: checked }
-              })}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Direct Messages</h4>
-              <p className="text-sm text-gray-500">Allow other users to send you messages</p>
-            </div>
-            <Switch 
-              checked={userSettings.privacy.allowMessaging}
-              onCheckedChange={(checked) => setUserSettings({
-                ...userSettings,
-                privacy: { ...userSettings.privacy, allowMessaging: checked }
-              })}
-            />
-          </div>
-          
-          <div className="pt-2">
-            <Button onClick={handleSaveSettings} disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : "Save Settings"}
-            </Button>
-          </div>
-        </div>
       </ProfileCard>
       
       <ProfileCard

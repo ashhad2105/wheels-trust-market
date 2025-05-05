@@ -7,18 +7,12 @@ import ProfileCard from "../ProfileCard";
 
 interface NotificationSettings {
   email: boolean;
-  push: boolean;
-  sms: boolean;
-  offers: boolean;
 }
 
 const NotificationsTab = () => {
   const [loading, setLoading] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     email: true,
-    push: false,
-    sms: true,
-    offers: false,
   });
 
   const handleSavePreferences = () => {
@@ -48,48 +42,6 @@ const NotificationsTab = () => {
               onCheckedChange={(checked) => setNotificationSettings({
                 ...notificationSettings,
                 email: checked
-              })}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Push Notifications</h4>
-              <p className="text-sm text-gray-500">Receive notifications on your device</p>
-            </div>
-            <Switch 
-              checked={notificationSettings.push}
-              onCheckedChange={(checked) => setNotificationSettings({
-                ...notificationSettings,
-                push: checked
-              })}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">SMS Notifications</h4>
-              <p className="text-sm text-gray-500">Receive text messages for urgent updates</p>
-            </div>
-            <Switch 
-              checked={notificationSettings.sms}
-              onCheckedChange={(checked) => setNotificationSettings({
-                ...notificationSettings,
-                sms: checked
-              })}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Marketing & Offers</h4>
-              <p className="text-sm text-gray-500">Receive promotional content and special offers</p>
-            </div>
-            <Switch 
-              checked={notificationSettings.offers}
-              onCheckedChange={(checked) => setNotificationSettings({
-                ...notificationSettings,
-                offers: checked
               })}
             />
           </div>

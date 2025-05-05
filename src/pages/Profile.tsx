@@ -19,6 +19,7 @@ import GeneralTab from "@/components/profile/tabs/GeneralTab";
 import CarsTab from "@/components/profile/tabs/CarsTab";
 import SecurityTab from "@/components/profile/tabs/SecurityTab";
 import NotificationsTab from "@/components/profile/tabs/NotificationsTab";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserProfile {
   name: string;
@@ -37,13 +38,16 @@ interface UserProfile {
 const Profile = () => {
   const { isAuthenticated, user, token } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [profileLoading, setProfileLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
   
   // Fetch user profile from the backend
   const fetchUserProfile = async () => {
     if (!token || !user?.id) {
       setProfileLoading(false);
+      setFetchAttempted(true);
       return;
     }
     
@@ -62,26 +66,43 @@ const Profile = () => {
       setUserProfile(userData);
     } catch (error) {
       console.error("Error fetching user profile:", error);
+      // If the API fails, create a placeholder profile from the auth context
+      setUserProfile({
+        name: user.name || "",
+        email: user.email || "",
+        phone: "",
+        address: {},
+        role: user.role || "user"
+      });
+      
+      toast({
+        title: "Couldn't fetch profile details",
+        description: "Using information from your session instead.",
+        variant: "destructive"
+      });
     } finally {
       setProfileLoading(false);
+      setFetchAttempted(true);
     }
   };
   
   // Effect to fetch user profile on component mount if authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !fetchAttempted) {
       fetchUserProfile();
+    } else if (!isAuthenticated) {
+      setProfileLoading(false);
     }
   }, [isAuthenticated, user]);
   
   // Redirect if not logged in
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && fetchAttempted) {
       navigate("/");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, fetchAttempted]);
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !userProfile) {
     return null; // Will be redirected
   }
 
