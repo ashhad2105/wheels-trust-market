@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -12,8 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { FaGithub, FaGoogle, FaFacebook } from "react-icons/fa";
-import axios from "axios";
+// Remove FaGithub, FaGoogle, FaFacebook imports
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               : "Create an account to start buying and selling."}
           </DialogDescription>
         </DialogHeader>
-        <AuthForm isLogin={isLogin} onClose={onClose} />
+        <AuthForm isLogin={isLogin} onClose={onClose} setIsLogin={setIsLogin} />
         <div className="text-center text-sm text-gray-500 mt-4">
           {isLogin ? (
             <>
@@ -63,7 +63,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-const AuthForm = ({ isLogin, onClose }: { isLogin: boolean; onClose: () => void }) => {
+interface AuthFormProps {
+  isLogin: boolean;
+  onClose: () => void;
+  setIsLogin: (isLogin: boolean) => void;
+}
+
+const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onClose, setIsLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");

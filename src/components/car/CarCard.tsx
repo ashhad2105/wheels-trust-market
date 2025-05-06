@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,12 +20,13 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
     navigate(`/cars/details/${car.id}`);
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | string) => {
+    const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/[^\d.]/g, '')) : price;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,
-    }).format(price);
+    }).format(numericPrice);
   };
 
   const formatMileage = (mileage: number) => {
@@ -75,7 +77,7 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-bold text-lg">{title}</h3>
           <span className="text-lg font-semibold text-primary">
-            {formatPrice(car.price)}
+            {typeof car.price === 'string' ? car.price : formatPrice(car.price)}
           </span>
         </div>
         

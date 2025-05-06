@@ -1,16 +1,17 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, Car as CarIcon, Settings } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 
 const Hero = () => {
-  const { openAuthModal, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { openModal } = useAuthModal();
   const [searchType, setSearchType] = useState<"buy" | "sell" | "service">("buy");
 
   const handleActionClick = () => {
     if (!isAuthenticated) {
-      openAuthModal();
+      openModal();
     } else {
       // Redirect to relevant page based on action
       window.location.href = 

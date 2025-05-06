@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -40,7 +41,10 @@ const Index = () => {
         </section>
         <ServiceSection services={services} />
         <Testimonials />
-        <AuthModal />
+        <AuthModal 
+          isOpen={isAuthModalOpen} 
+          onClose={() => setIsAuthModalOpen(false)} 
+        />
         <ServiceProviderModal 
           isOpen={isPartnerModalOpen}
           onClose={() => setIsPartnerModalOpen(false)}

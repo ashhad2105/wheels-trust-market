@@ -1,53 +1,70 @@
 export interface CarType {
   id: string;
-  title: string;
+  title?: string;
   make: string;
   model: string;
   year: number;
-  price: number;
+  price: number | string;
   mileage: number;
-  condition: string;
+  condition?: string;
   location: string;
-  description: string;
-  images: string[];
-  seller: string;
-  features: string[];
-  status: string;
-  color: string;
+  description?: string;
   image: string;
-  rating: number;
-  reviewCount: number;
-  fuelType: string;
-  transmission: string;
-  sellerType: string;
+  images?: string[];
+  features?: string[];
+  seller?: string;
+  sellerType?: "dealer" | "private";
+  color?: string;
+  rating?: number;
+  reviewCount?: number;
+  fuelType?: string;
+  transmission?: string;
+  status?: string;
 }
 
 export interface ServiceType {
   id: string;
   name: string;
   description: string;
-  price: string;
-  duration: string;
-  category: string;
-  status: string;
-  provider: {
+  price: string | number;
+  rating: number;
+  reviewCount: number;
+  image?: string;
+  available?: boolean;
+  featured?: boolean;
+  provider?: {
     id: string;
     name: string;
     rating: number;
-    reviewCount: number;
+    image?: string;
+    verified?: boolean;
+    location?: string;
   };
-  image: string;
-  rating: number;
 }
 
 export interface ServiceProviderType {
   id: string;
   name: string;
+  description: string;
+  image: string;
   rating: number;
   reviewCount: number;
-  image?: string;
-  location?: string;
+  services: ServiceType[];
+  specialties?: string[];
+  location?: {
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  } | string;
+  hours?: {
+    [key: string]: string;
+  };
+  phone?: string;
+  email?: string;
+  website?: string;
   verified?: boolean;
+  status?: string;
 }
 
 export const cars: CarType[] = [
@@ -257,67 +274,79 @@ export const services: ServiceType[] = [
     name: "Vehicle Inspection",
     description: "Comprehensive pre-purchase inspection with detailed report",
     price: "$149",
-    duration: "2 hours",
-    category: "Inspection",
-    status: "Completed",
+    rating: 4.9,
+    reviewCount: 105,
+    image: "/placeholder.svg",
+    available: true,
+    featured: true,
     provider: {
       id: "4",
       name: "Precision Auto Inspection",
       rating: 4.9,
       reviewCount: 105,
+      image: "/placeholder.svg",
+      verified: true,
+      location: "Houston, TX",
     },
-    image: "/placeholder.svg",
-    rating: 4.9,
   },
   {
     id: "2",
     name: "Regular Maintenance",
     description: "Oil change, filter replacement, and safety check",
     price: "$89",
-    duration: "1 hour",
-    category: "Maintenance",
-    status: "Completed",
+    rating: 4.8,
+    reviewCount: 120,
+    image: "/placeholder.svg",
+    available: true,
+    featured: false,
     provider: {
       id: "1",
       name: "Premium Auto Care",
       rating: 4.9,
       reviewCount: 120,
+      image: "/placeholder.svg",
+      verified: true,
+      location: "New York, NY",
     },
-    image: "/placeholder.svg",
-    rating: 4.8,
   },
   {
     id: "3",
     name: "Performance Tuning",
     description: "Engine tuning and performance optimization",
     price: "$299",
-    duration: "3 hours",
-    category: "Performance",
-    status: "Completed",
+    rating: 4.7,
+    reviewCount: 95,
+    image: "/placeholder.svg",
+    available: true,
+    featured: false,
     provider: {
       id: "2",
       name: "Elite Automotive Solutions",
       rating: 4.7,
       reviewCount: 95,
+      image: "/placeholder.svg",
+      verified: true,
+      location: "Los Angeles, CA",
     },
-    image: "/placeholder.svg",
-    rating: 4.7,
   },
   {
     id: "4",
     name: "Brake System Service",
     description: "Complete brake inspection and pad replacement",
     price: "$189",
-    duration: "2 hours",
-    category: "Repair",
-    status: "Completed",
+    rating: 4.8,
+    reviewCount: 88,
+    image: "/placeholder.svg",
+    available: true,
+    featured: false,
     provider: {
       id: "3",
       name: "Trusty Mechanics",
       rating: 4.7,
       reviewCount: 88,
+      image: "/placeholder.svg",
+      verified: false,
+      location: "Chicago, IL",
     },
-    image: "/placeholder.svg",
-    rating: 4.8,
   },
 ];

@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -26,18 +27,20 @@ interface AuthContextProps {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, userData: User) => void;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  signup: (token: string, userData: User) => void;
+  signup: (email: string, password: string, name: string) => Promise<boolean>;
+  openAuthModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  login: () => {},
+  login: async () => false,
   logout: () => {},
-  signup: () => {},
+  signup: async () => false,
+  openAuthModal: () => {},
 });
 
 interface AuthProviderProps {
@@ -48,24 +51,53 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkToken();
   }, []);
 
-  const login = (token: string, userData: User) => {
-    localStorage.setItem("token", token);
-    setUser(userData);
-    setIsAuthenticated(true);
-    navigate("/");
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`,
+        { email, password }
+      );
+
+      if (response.data.success) {
+        const { token, user } = response.data;
+        localStorage.setItem("token", token);
+        setUser(user);
+        setIsAuthenticated(true);
+        return true;
+      } 
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    }
   };
 
-  const signup = (token: string, userData: User) => {
-    localStorage.setItem("token", token);
-    setUser(userData);
-    setIsAuthenticated(true);
-    navigate("/");
+  const signup = async (email: string, password: string, name: string): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`,
+        { email, password, name }
+      );
+
+      if (response.data.success) {
+        const { token, user } = response.data;
+        localStorage.setItem("token", token);
+        setUser(user);
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Signup error:", error);
+      return false;
+    }
   };
 
   const logout = () => {
@@ -73,6 +105,10 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     navigate("/");
+  };
+
+  const openAuthModal = () => {
+    setIsAuthModalOpen(true);
   };
 
   const checkToken = async () => {
@@ -120,6 +156,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     signup,
+    openAuthModal,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
