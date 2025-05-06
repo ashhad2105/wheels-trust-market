@@ -1,19 +1,24 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Eye, Plus, Trash, Car } from "lucide-react";
+import { Eye, Trash, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CarFormModal } from "@/components/car/CarFormModal";
+import axios from "axios";
+
+interface CarImage {
+  url: string;
+  publicId: string;
+}
 
 interface CarListing {
-  id: string;
+  _id: string;
   title: string;
   year: string;
   make: string;
@@ -24,45 +29,31 @@ interface CarListing {
   condition: "Excellent" | "Good" | "Fair" | "Poor";
   location: string;
   status: "active" | "sold" | "pending" | "draft";
-  images: string[];
+  images: CarImage[];
+  seller: {
+    _id: string;
+    name: string;
+  };
+  createdAt: string;
+  features?: string[];
+  exteriorColor?: string;
+  interiorColor?: string;
+  fuelType?: string;
+  transmission?: string;
 }
 
-const CarListingManagement: React.FC = () => {
-  const [listings, setListings] = useState<CarListing[]>([
-    {
-      id: "1",
-      title: "2018 Toyota Camry XSE",
-      year: "2018",
-      make: "Toyota",
-      model: "Camry XSE",
-      price: "19500",
-      mileage: "45000",
-      description: "Well maintained Toyota Camry with low mileage. Features include leather seats, sunroof, and premium sound system.",
-      condition: "Excellent",
-      location: "San Francisco, CA",
-      status: "active",
-      images: ["https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=300&h=200"]
-    },
-    {
-      id: "2",
-      title: "2020 Honda Accord Sport",
-      year: "2020",
-      make: "Honda",
-      model: "Accord Sport",
-      price: "23800",
-      mileage: "28000",
-      description: "One owner Honda Accord in pristine condition. Includes Honda Sensing safety features and Apple CarPlay.",
-      condition: "Excellent",
-      location: "Oakland, CA",
-      status: "active",
-      images: ["https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=300&h=200"]
-    },
-  ]);
+// Component for listing header
+const ListingHeader = ({ onAddClick }: { onAddClick: () => void }) => (
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-2xl font-semibold">Car Listings</h2>
+    <Button onClick={onAddClick}>
+      Add Listing
+    </Button>
+  </div>
+);
 
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editListing, setEditListing] = useState<CarListing | null>(null);
-  const { toast } = useToast();
-
+// Component for car status badge
+const StatusBadge = ({ status }: { status: string }) => {
   const statusColors: Record<string, string> = {
     active: "bg-green-100 text-green-800",
     sold: "bg-blue-100 text-blue-800",
@@ -70,536 +61,351 @@ const CarListingManagement: React.FC = () => {
     draft: "bg-gray-100 text-gray-800"
   };
 
-  const handleAddListing = (newListing: Partial<CarListing>) => {
-    const listing: CarListing = {
-      id: Date.now().toString(),
-      title: `${newListing.year} ${newListing.make} ${newListing.model}`,
-      year: newListing.year || "",
-      make: newListing.make || "",
-      model: newListing.model || "",
-      price: newListing.price || "",
-      mileage: newListing.mileage || "",
-      description: newListing.description || "",
-      condition: newListing.condition as "Excellent" | "Good" | "Fair" | "Poor" || "Good",
-      location: newListing.location || "",
-      status: "active",
-      images: newListing.images || []
-    };
+  return (
+    <Badge className={statusColors[status]}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </Badge>
+  );
+};
 
-    setListings([...listings, listing]);
-    setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Listing Created",
-      description: "Your car listing has been created successfully."
-    });
+// Component for empty listings state
+const EmptyListingsState = ({ onAddClick }: { onAddClick: () => void }) => (
+  <div className="text-center py-12 bg-gray-50 rounded-lg">
+    <Car className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+    <h3 className="text-lg font-medium mb-1">No Listings Yet</h3>
+    <p className="text-gray-500 mb-4">You haven't created any car listings yet.</p>
+    <Button onClick={onAddClick}>Create Your First Listing</Button>
+  </div>
+);
+
+// Component for car listing card
+const CarListingCard = ({
+  car,
+  onDelete,
+  onEdit,
+  onStatusChange
+}: {
+  car: CarListing;
+  onDelete: (id: string) => void;
+  onEdit: (car: CarListing) => void;
+  onStatusChange: (id: string, status: string) => void;
+}) => {
+  return (
+    <Card key={car._id}>
+      <CardContent className="p-0">
+        <div className="flex flex-col md:flex-row">
+          <div className="md:w-1/4 h-48 md:h-auto bg-gray-100 relative">
+            {car.images && car.images.length > 0 ? (
+              <>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="absolute top-2 right-2 z-10"
+                  onClick={() => onDelete(car._id)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+                <img 
+                  src={car.images[0].url} 
+                  alt={car.title} 
+                  className="w-full h-full object-cover"
+                />
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                No Image
+              </div>
+            )}
+          </div>
+          <div className="md:w-3/4 p-6">
+            <div className="flex justify-between mb-2">
+              <h3 className="text-xl font-semibold">{car.title}</h3>
+              <StatusBadge status={car.status} />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <p className="text-sm text-gray-500">Price</p>
+                <p className="font-medium">₹{Number(car.price.replace(/\$/g, '')).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Mileage</p>
+                <p className="font-medium">{Number(car.mileage).toLocaleString()} km</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Condition</p>
+                <p className="font-medium">{car.condition}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Location</p>
+                <p className="font-medium">{car.location}</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-4 line-clamp-2">{car.description}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/cars/details/${car._id}`}>
+                  <Eye className="h-4 w-4 mr-1" /> View
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => onEdit(car)}
+              >
+                Edit
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-destructive border-destructive">
+                    <Trash className="h-4 w-4 mr-1" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the listing for "{car.title}". This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => onDelete(car._id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              {car.status !== "sold" && (
+                <select
+                  className="h-9 px-3 rounded-md border border-input bg-background text-sm"
+                  value={car.status}
+                  onChange={(e) => onStatusChange(car._id, e.target.value)}
+                >
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="sold">Sold</option>
+                  <option value="draft">Draft</option>
+                </select>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Main component
+const CarListingManagement: React.FC = () => {
+  const [listings, setListings] = useState<CarListing[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editCarId, setEditCarId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchListings = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        setListings(response.data.data || []);
+      } else {
+        throw new Error("Failed to fetch car listings");
+      }
+    } catch (error) {
+      console.error("Error fetching car listings:", error);
+      setError("Failed to load car listings");
+      toast({
+        title: "Error",
+        description: "Failed to load car listings",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditListing = (updatedListing: CarListing) => {
-    setListings(listings.map(listing => 
-      listing.id === updatedListing.id ? updatedListing : listing
-    ));
-    setEditListing(null);
-    
-    toast({
-      title: "Listing Updated",
-      description: "Your car listing has been updated successfully."
-    });
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const handleCarModalSuccess = () => {
+    setIsAddModalOpen(false);
+    setEditCarId(null);
+    fetchListings();
   };
 
-  const handleDeleteListing = (id: string) => {
-    setListings(listings.filter(listing => listing.id !== id));
-    
-    toast({
-      title: "Listing Deleted",
-      description: "The car listing has been deleted successfully."
-    });
-  };
-
-  const handleStatusChange = (id: string, status: CarListing['status']) => {
-    setListings(listings.map(listing => 
-      listing.id === id ? { ...listing, status } : listing
-    ));
-    
-    toast({
-      title: "Status Updated",
-      description: `Listing status has been changed to ${status}.`
-    });
-  };
-
-  // Form component for add/edit
-  const ListingForm = ({ initialData, onSave, onCancel }: { 
-    initialData?: Partial<CarListing>, 
-    onSave: (data: Partial<CarListing>) => void,
-    onCancel: () => void
-  }) => {
-    const [formData, setFormData] = useState<Partial<CarListing>>(initialData || {
-      year: "",
-      make: "",
-      model: "",
-      price: "",
-      mileage: "",
-      description: "",
-      condition: "Good",
-      location: "",
-      images: []
-    });
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      setFormData({ ...formData, [name]: value });
-    };
-
-    const handleSelectChange = (name: string, value: string) => {
-      if (name === "condition") {
-        setFormData({ 
-          ...formData, 
-          [name]: value as "Excellent" | "Good" | "Fair" | "Poor" 
+  const handleDeleteListing = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        setListings(prev => prev.filter(car => car._id !== id));
+        toast({
+          title: "Success",
+          description: "Car listing deleted successfully",
         });
       } else {
-        setFormData({ ...formData, [name]: value });
+        throw new Error("Failed to delete car listing");
       }
-    };
-
-    const handleImageAdd = () => {
-      // This would normally open a file picker or URL input
-      // For demo purposes, we'll just add a placeholder image URL
-      const images = formData.images || [];
-      setFormData({ 
-        ...formData, 
-        images: [...images, "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=300&h=200"] 
-      });
-      
+    } catch (error) {
+      console.error("Error deleting car listing:", error);
       toast({
-        title: "Image Added",
-        description: "Sample image has been added to the listing."
+        title: "Error",
+        description: "Failed to delete car listing",
+        variant: "destructive",
       });
-    };
+    }
+  };
 
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!formData.year || !formData.make || !formData.model || !formData.price) {
-        toast({
-          title: "Missing Fields",
-          description: "Please fill in all required fields.",
-          variant: "destructive"
-        });
-        return;
-      }
+  const handleEditListing = (car: CarListing) => {
+    setEditCarId(car._id);
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/cars/${id}/status`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       
-      onSave(formData);
-    };
+      if (response.data.success) {
+        setListings(prev => prev.map(car => 
+          car._id === id ? { ...car, status: status as any } : car
+        ));
+        
+        toast({
+          title: "Status Updated",
+          description: `Listing status changed to ${status}`,
+        });
+      } else {
+        throw new Error("Failed to update car status");
+      }
+    } catch (error) {
+      console.error("Error updating car status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update car status",
+        variant: "destructive",
+      });
+    }
+  };
 
+  if (isLoading) {
     return (
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Year*</label>
-            <Input 
-              name="year"
-              value={formData.year}
-              onChange={handleChange}
-              placeholder="e.g. 2021"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Make*</label>
-            <Input 
-              name="make"
-              value={formData.make}
-              onChange={handleChange}
-              placeholder="e.g. Toyota"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Model*</label>
-            <Input 
-              name="model"
-              value={formData.model}
-              onChange={handleChange}
-              placeholder="e.g. Camry"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Price ($)*</label>
-            <Input 
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              placeholder="e.g. 25000"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Mileage</label>
-            <Input 
-              name="mileage"
-              value={formData.mileage}
-              onChange={handleChange}
-              placeholder="e.g. 15000"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Condition</label>
-            <Select 
-              value={formData.condition} 
-              onValueChange={(value) => handleSelectChange("condition", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select condition" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Excellent">Excellent</SelectItem>
-                <SelectItem value="Good">Good</SelectItem>
-                <SelectItem value="Fair">Fair</SelectItem>
-                <SelectItem value="Poor">Poor</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="md:col-span-3 space-y-2">
-            <label className="text-sm font-medium">Location</label>
-            <Input 
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="e.g. San Francisco, CA"
-            />
-          </div>
-          <div className="md:col-span-3 space-y-2">
-            <label className="text-sm font-medium">Description</label>
-            <Textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe the vehicle..."
-              rows={3}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium">Images</label>
-            <Button type="button" variant="outline" size="sm" onClick={handleImageAdd}>
-              <Plus className="h-4 w-4 mr-1" /> Add Image
-            </Button>
-          </div>
-          {formData.images && formData.images.length > 0 ? (
-            <div className="flex gap-2 flex-wrap">
-              {formData.images.map((img, index) => (
-                <div key={index} className="relative w-20 h-20 bg-gray-100 rounded overflow-hidden">
-                  <img src={img} alt={`Car ${index + 1}`} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500">No images added yet</p>
-          )}
-        </div>
-        
-        <div className="flex gap-2 justify-end pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {initialData?.id ? 'Update Listing' : 'Create Listing'}
-          </Button>
-        </div>
-      </form>
+      <div className="flex justify-center items-center py-10">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        <span className="ml-3">Loading...</span>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 bg-red-50 rounded-lg">
+        <h3 className="text-lg font-medium text-red-800 mb-2">{error}</h3>
+        <Button onClick={fetchListings}>Try Again</Button>
+      </div>
+    );
+  }
+
+  const filteredByStatus = (status: string) => {
+    return listings.filter(car => car.status === status);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Car Listings</h2>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" /> Add Listing
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px]">
-            <DialogHeader>
-              <DialogTitle>Add New Car Listing</DialogTitle>
-              <DialogDescription>
-                Create a new car listing to sell a vehicle.
-              </DialogDescription>
-            </DialogHeader>
-            <ListingForm 
-              onSave={handleAddListing} 
-              onCancel={() => setIsAddDialogOpen(false)} 
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Edit listing dialog */}
-      <Dialog open={!!editListing} onOpenChange={(open) => !open && setEditListing(null)}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>Edit Car Listing</DialogTitle>
-            <DialogDescription>
-              Update your car listing details.
-            </DialogDescription>
-          </DialogHeader>
-          {editListing && (
-            <ListingForm 
-              initialData={editListing} 
-              onSave={handleEditListing} 
-              onCancel={() => setEditListing(null)} 
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ListingHeader onAddClick={() => setIsAddModalOpen(true)} />
 
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">All Listings</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="sold">Sold</TabsTrigger>
-          <TabsTrigger value="draft">Drafts</TabsTrigger>
+          <TabsTrigger value="all">All Listings ({listings.length})</TabsTrigger>
+          <TabsTrigger value="active">Active ({filteredByStatus('active').length})</TabsTrigger>
+          <TabsTrigger value="pending">Pending ({filteredByStatus('pending').length})</TabsTrigger>
+          <TabsTrigger value="sold">Sold ({filteredByStatus('sold').length})</TabsTrigger>
+          <TabsTrigger value="draft">Drafts ({filteredByStatus('draft').length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-4">
           <div className="grid grid-cols-1 gap-4">
-            {listings.map((listing) => (
-              <Card key={listing.id}>
-                <CardContent className="p-0">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="md:w-1/4 h-48 md:h-auto bg-gray-100">
-                      {listing.images && listing.images.length > 0 ? (
-                        <img 
-                          src={listing.images[0]} 
-                          alt={listing.title} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                    <div className="md:w-3/4 p-6">
-                      <div className="flex justify-between mb-2">
-                        <h3 className="text-xl font-semibold">{listing.title}</h3>
-                        <Badge className={statusColors[listing.status]}>
-                          {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-gray-500">Price</p>
-                          <p className="font-medium">${Number(listing.price).toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Mileage</p>
-                          <p className="font-medium">{Number(listing.mileage).toLocaleString()} mi</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Condition</p>
-                          <p className="font-medium">{listing.condition}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Location</p>
-                          <p className="font-medium">{listing.location}</p>
-                        </div>
-                      </div>
-                      <p className="text-gray-700 mb-4 line-clamp-2">{listing.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/cars/details/${listing.id}`}>
-                            <Eye className="h-4 w-4 mr-1" /> View
-                          </Link>
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setEditListing(listing)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" /> Edit
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-destructive border-destructive">
-                              <Trash className="h-4 w-4 mr-1" /> Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete the listing for "{listing.title}". This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => handleDeleteListing(listing.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        
-                        {listing.status !== "sold" && (
-                          <Select 
-                            value={listing.status} 
-                            onValueChange={(value) => handleStatusChange(listing.id, value as CarListing['status'])}
-                          >
-                            <SelectTrigger className="h-9 w-32">
-                              <SelectValue placeholder="Change Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="sold">Sold</SelectItem>
-                              <SelectItem value="draft">Draft</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {listings.length === 0 && (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <Car className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-1">No Listings Yet</h3>
-                <p className="text-gray-500 mb-4">You haven't created any car listings yet.</p>
-                <Button onClick={() => setIsAddDialogOpen(true)}>Create Your First Listing</Button>
-              </div>
+            {listings.length > 0 ? (
+              listings.map((car) => (
+                <CarListingCard
+                  key={car._id}
+                  car={car}
+                  onDelete={handleDeleteListing}
+                  onEdit={handleEditListing}
+                  onStatusChange={handleStatusChange}
+                />
+              ))
+            ) : (
+              <EmptyListingsState onAddClick={() => setIsAddModalOpen(true)} />
             )}
           </div>
         </TabsContent>
         
-        {/* Other tabs would filter the listings by status */}
+        {/* Tabs for filtered statuses */}
         {["active", "pending", "sold", "draft"].map((status) => (
           <TabsContent key={status} value={status} className="mt-4">
             <div className="grid grid-cols-1 gap-4">
-              {listings.filter(listing => listing.status === status).length > 0 ? (
-                listings
-                  .filter(listing => listing.status === status)
-                  .map((listing) => (
-                    <Card key={listing.id}>
-                      <CardContent className="p-0">
-                        <div className="flex flex-col md:flex-row">
-                          <div className="md:w-1/4 h-48 md:h-auto bg-gray-100">
-                            {listing.images && listing.images.length > 0 ? (
-                              <img 
-                                src={listing.images[0]} 
-                                alt={listing.title} 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                No Image
-                              </div>
-                            )}
-                          </div>
-                          <div className="md:w-3/4 p-6">
-                            <div className="flex justify-between mb-2">
-                              <h3 className="text-xl font-semibold">{listing.title}</h3>
-                              <Badge className={statusColors[listing.status]}>
-                                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                              </Badge>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                              <div>
-                                <p className="text-sm text-gray-500">Price</p>
-                                <p className="font-medium">${Number(listing.price).toLocaleString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Mileage</p>
-                                <p className="font-medium">{Number(listing.mileage).toLocaleString()} mi</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Condition</p>
-                                <p className="font-medium">{listing.condition}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Location</p>
-                                <p className="font-medium">{listing.location}</p>
-                              </div>
-                            </div>
-                            <p className="text-gray-700 mb-4 line-clamp-2">{listing.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Button variant="outline" size="sm" asChild>
-                                <Link to={`/cars/details/${listing.id}`}>
-                                  <Eye className="h-4 w-4 mr-1" /> View
-                                </Link>
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => setEditListing(listing)}
-                              >
-                                <Edit className="h-4 w-4 mr-1" /> Edit
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="text-destructive border-destructive">
-                                    <Trash className="h-4 w-4 mr-1" /> Delete
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This will permanently delete the listing for "{listing.title}". This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => handleDeleteListing(listing.id)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                              
-                              {listing.status !== "sold" && (
-                                <Select 
-                                  value={listing.status} 
-                                  onValueChange={(value) => handleStatusChange(listing.id, value as CarListing['status'])}
-                                >
-                                  <SelectTrigger className="h-9 w-32">
-                                    <SelectValue placeholder="Change Status" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="sold">Sold</SelectItem>
-                                    <SelectItem value="draft">Draft</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+              {filteredByStatus(status).length > 0 ? (
+                filteredByStatus(status).map((car) => (
+                  <CarListingCard
+                    key={car._id}
+                    car={car}
+                    onDelete={handleDeleteListing}
+                    onEdit={handleEditListing}
+                    onStatusChange={handleStatusChange}
+                  />
+                ))
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Car className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-1">No {status.charAt(0).toUpperCase() + status.slice(1)} Listings</h3>
-                  <p className="text-gray-500 mb-4">You don't have any {status} car listings at the moment.</p>
-                  <Button onClick={() => setIsAddDialogOpen(true)}>Create New Listing</Button>
-                </div>
+                <EmptyListingsState onAddClick={() => setIsAddModalOpen(true)} />
               )}
             </div>
           </TabsContent>
         ))}
       </Tabs>
+
+      <CarFormModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
+
+      {editCarId && (
+        <CarFormModal
+          isOpen={!!editCarId}
+          onClose={() => setEditCarId(null)}
+          carId={editCarId}
+        />
+      )}
     </div>
   );
 };

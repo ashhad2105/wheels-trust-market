@@ -4,8 +4,8 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/components/home/Hero";
 import Features from "@/components/home/Features";
-// import CarListingPreview from "@/components/home/CarListingPreview";
-// import ServiceSection from "@/components/home/ServiceSection";
+import CarListingPreview from "@/components/home/CarListingPreview";
+import ServiceSection from "@/components/home/ServiceSection";
 import Testimonials from "@/components/home/Testimonials";
 import AuthModal from "@/components/auth/AuthModal";
 import ServiceProviderModal from "@/components/partner/ServiceProviderModal";
@@ -21,6 +21,7 @@ const Index = () => {
       <main className="flex-grow">
         <Hero />
         <Features />
+        <CarListingPreview cars={cars} />
         <section className="py-16 bg-primary-50">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Partner With Us</h2>
@@ -37,6 +38,7 @@ const Index = () => {
             </Button>
           </div>
         </section>
+        <ServiceSection services={services} />
         <Testimonials />
         <AuthModal />
         <ServiceProviderModal 

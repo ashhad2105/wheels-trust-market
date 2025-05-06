@@ -2,48 +2,63 @@
 import React from "react";
 import Modal from "@/components/ui/modal";
 import ServiceProviderForm from "./ServiceProviderForm";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
 interface ServiceProviderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  serviceProviderId?: string;
 }
 
-const ServiceProviderModal: React.FC<ServiceProviderModalProps> = ({ isOpen, onClose }) => {
-  const { isAuthenticated, openAuthModal } = useAuth();
-
-  React.useEffect(() => {
-    // If the modal is open but user is not authenticated, prompt for login
-    if (isOpen && !isAuthenticated) {
-      onClose();
-      openAuthModal();
-    }
-  }, [isOpen, isAuthenticated, onClose, openAuthModal]);
+const ServiceProviderModal: React.FC<ServiceProviderModalProps> = ({
+  isOpen,
+  onClose,
+  serviceProviderId,
+}) => {
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   const handleSuccess = () => {
-    // Close the modal after successful submission
-    setTimeout(() => {
-      onClose();
-    }, 2000);
+    toast({
+      title: serviceProviderId ? "Updated Successfully" : "Registration Successful",
+      description: serviceProviderId
+        ? "Your service provider profile has been updated"
+        : "You have successfully registered as a service provider. Your application will be reviewed by our team.",
+    });
+    onClose();
   };
 
   return (
     <Modal
-      isOpen={isOpen && isAuthenticated}
+      isOpen={isOpen}
       onClose={onClose}
-      title="Become a Service Partner"
+      title={serviceProviderId ? "Edit Service Provider" : "Register as Service Provider"}
       size="xl"
     >
       <div className="p-4">
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Join our network of trusted service providers and grow your business.
-            Fill out the form below to get started. Our team will review your application
-            and get back to you within 48 hours.
-          </p>
-        </div>
-        
-        <ServiceProviderForm onSuccess={handleSuccess} onCancel={onClose} />
+        {!isAuthenticated ? (
+          <div className="text-center py-8">
+            <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+            <p className="text-gray-500 mb-4">
+              Please login or create an account to register as a service provider
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Login / Register
+              </button>
+            </div>
+          </div>
+        ) : (
+          <ServiceProviderForm
+            serviceProviderId={serviceProviderId}
+            onSuccess={handleSuccess}
+            onCancel={onClose}
+          />
+        )}
       </div>
     </Modal>
   );

@@ -1,210 +1,132 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  ReactNode,
+} from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useToast } from "@/hooks/use-toast";
 
-export type UserRole = "user" | "admin" | "service_provider";
-
-type User = {
-  id: string;
+interface User {
+  _id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: string;
+  status: string;
+  createdAt: string;
   avatar?: string;
-  phone?: string;
-  joinedDate?: string;
+  avatarPublicId?: string;
   address?: string;
-  
-};
+  emailVerified?: boolean;
+  phone?: string;
+}
 
-type AuthContextType = {
+interface AuthContextProps {
   user: User | null;
   isAuthenticated: boolean;
-  isAuthModalOpen: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  isLoading: boolean;
+  login: (token: string, userData: User) => void;
   logout: () => void;
-  openAuthModal: () => void;
-  closeAuthModal: () => void;
-  updateUser: (userData: Partial<User>) => void;
-};
+  signup: (token: string, userData: User) => void;
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextProps>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  login: () => {},
+  logout: () => {},
+  signup: () => {},
+});
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if there's a stored token and fetch user data
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchUserData(token);
-    }
+    checkToken();
   }, []);
 
-  const fetchUserData = async (token: string) => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/me`, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.data.success) {
-        const userData = response.data.data;
-        setUser({
-          id: userData._id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role,
-          avatar: userData.avatar,
-          phone: userData.phone,
-          joinedDate: userData.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        });
-        console.log("Fetched user data:", userData);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      localStorage.removeItem('token');
-    }
+  const login = (token: string, userData: User) => {
+    localStorage.setItem("token", token);
+    setUser(userData);
+    setIsAuthenticated(true);
+    navigate("/");
   };
 
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`, 
-        { email, password }
-      );
-      
-      if (response.data.success) {
-        console.log("Login response:", response.data);
-        
-        // Get token and user data from response
-        const { token, data: userData } = response.data;
-        
-        // Save token to localStorage
-        localStorage.setItem('token', token);
-        
-        // Safely handle potentially missing data
-        const user = {
-          id: userData?._id || "unknown",
-          name: userData?.name || "Unknown User",
-          email: userData?.email || email,
-          role: (userData?.role as UserRole) || "user",
-          avatar: userData?.avatar,
-          phone: userData?.phone,
-          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        };
-        
-        setUser(user);
-        console.log("Logged in as:", user);
-        
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!"
-        });
-      }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast({
-        title: "Login Failed",
-        description: error.response?.data?.error || "Invalid credentials",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`, 
-        { name, email, password }
-      );
-      
-      if (response.data.success) {
-        const { token, data: userData } = response.data;
-        
-        // Save token to localStorage
-        localStorage.setItem('token', token);
-        
-        // Safely handle potentially missing data
-        const user = {
-          id: userData?._id || "unknown",
-          name: userData?.name || name,
-          email: userData?.email || email,
-          role: (userData?.role as UserRole) || "user",
-          joinedDate: userData?.createdAt ? new Date(userData.createdAt).toISOString().split('T')[0] : undefined
-        };
-        
-        setUser(user);
-        
-        toast({
-          title: "Registration Successful",
-          description: "Welcome to WheelsTrust!"
-        });
-      }
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Registration Failed",
-        description: error.response?.data?.error || "Could not create account",
-        variant: "destructive"
-      });
-      throw error;
-    }
+  const signup = (token: string, userData: User) => {
+    localStorage.setItem("token", token);
+    setUser(userData);
+    setIsAuthenticated(true);
+    navigate("/");
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setUser(null);
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out"
-    });
+    setIsAuthenticated(false);
+    navigate("/");
   };
 
-  const openAuthModal = () => {
-    setIsAuthModalOpen(true);
-  };
+  const checkToken = async () => {
+    const token = localStorage.getItem("token");
 
-  const closeAuthModal = () => {
-    setIsAuthModalOpen(false);
-  };
+    if (!token) {
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
 
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      setUser({...user, ...userData});
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        console.log("Fetched user data:", response.data.data);
+        setUser(response.data.data);
+        setIsAuthenticated(true);
+      } else {
+        localStorage.removeItem("token");
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Error verifying token:", error);
+      setIsAuthenticated(false);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isAuthModalOpen,
-        login,
-        register,
-        logout,
-        openAuthModal,
-        closeAuthModal,
-        updateUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    signup,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+const useAuth = () => {
+  return useContext(AuthContext);
 };
+
+export { AuthProvider, useAuth };

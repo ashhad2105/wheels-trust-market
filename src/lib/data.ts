@@ -41,14 +41,12 @@ export interface ServiceType {
 }
 
 export interface ServiceProviderType {
-  id: number;
+  id: string;
   name: string;
-  image: string;
-  location: string;
   rating: number;
   reviewCount: number;
-  specialties: string[];
-  description: string;
+  image?: string;
+  location?: string;
   verified?: boolean;
 }
 

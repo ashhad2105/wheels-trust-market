@@ -33,6 +33,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
       size="xl"
     >
       <div className="p-4">
+        {/* Fixed CarForm props by ensuring they match CarForm's prop requirements */}
         <CarForm 
           carId={carId} 
           onSuccess={handleSuccess} 
