@@ -16,6 +16,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import axios from 'axios';
 import AuthModal from "@/components/auth/AuthModal";
+
+// Add these required props to CarForm
+interface CarFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+  carId?: string;
+}
+
 const makes = ["Toyota", "Honda", "Ford", "Chevrolet", "BMW", "Mercedes-Benz", "Audi", "Nissan", "Hyundai", "Kia"];
 
 const uploadToCloudinary = async (file: File): Promise<{ url: string; publicId: string }> => {
@@ -44,7 +52,7 @@ const uploadToCloudinary = async (file: File): Promise<{ url: string; publicId: 
 };
 
 
-const CarForm = () => {
+const CarForm: React.FC<CarFormProps> = ({ onSuccess, onCancel, carId }) => {
   
   const [activeTab, setActiveTab] = useState("sell-form");
   const [currentStep, setCurrentStep] = useState(1);
@@ -489,8 +497,8 @@ console.log("Car Data "+carData);
           );
         })}
         
-        <label className="flex flex-col items-center justify-center aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 cursor-pointer">
-          <Upload className="h-8 w-8 text-gray-400 mb-1" />
+        <label className="flex flex-col items-center justify-center aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-gray-400 cursor-pointer">
+          <Upload className="h-6 w-6 text-gray-400 mb-1" />
           <span className="text-sm text-gray-500">Add Photo</span>
           <input
             type="file"
@@ -765,17 +773,14 @@ console.log("Car Data "+carData);
 
   return (
     <>
-     
-      
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
-          
-                  <div className="p-6">
-                    <form>
-                      {renderStep()}
-                    </form>
-                  </div>
+          <div className="p-6">
+            <form>
+              {renderStep()}
+            </form>
           </div>
+        </div>
       </main>
       <AuthModal isOpen={false} onClose={() => {}} />
       <Footer />

@@ -9,7 +9,7 @@ interface CarFormModalProps {
   carId?: string; // For edit mode
 }
 
-// Need to make sure CarForm accepts these props
+// We need to make sure these CarFormProps match exactly what CarForm expects
 interface CarFormProps {
   onSuccess: () => void;
   onCancel: () => void;
