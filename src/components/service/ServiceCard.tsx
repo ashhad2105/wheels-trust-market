@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,16 +71,18 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             ))}
             <span className="ml-1 text-sm text-gray-600">{service.rating}</span>
           </div>
-          <span className="font-medium text-primary">{service.price}</span>
+          <span className="font-medium text-primary">₹{service.price}</span>
         </div>
         
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <img
-              src={service.provider.image}
-              alt={service.provider.name}
-              className="h-8 w-8 rounded-full"
-            />
+            {service.provider && service.provider.image && (
+              <img
+                src={service.provider.image}
+                alt={service.provider.name}
+                className="h-8 w-8 rounded-full"
+              />
+            )}
             <div>
               <p className="text-sm font-medium flex items-center">
                 {service.provider.name}
@@ -87,7 +90,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
                   <CheckCircle className="h-3 w-3 ml-1 text-green-600" />
                 )}
               </p>
-              <p className="text-xs text-gray-500">{service.provider.location}</p>
+              {service.provider.location && (
+                <p className="text-xs text-gray-500">{service.provider.location}</p>
+              )}
             </div>
           </div>
         </div>

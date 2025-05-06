@@ -12,7 +12,10 @@ interface ServiceSectionProps {
 
 const ServiceSection: React.FC<ServiceSectionProps> = ({ services }) => {
   // Only show the first 3 services in the preview
-  const previewServices = services.slice(0, 3);
+  const previewServices = services.slice(0, 3).map(service => ({
+    ...service,
+    price: `₹${service.price.replace(/\$/g, '')}`
+  }));
 
   return (
     <section className="section-padding bg-blue-50">

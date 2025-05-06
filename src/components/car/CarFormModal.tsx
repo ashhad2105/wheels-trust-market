@@ -1,7 +1,7 @@
-// components/VehicleFormModal.tsx
+
 import React, { useState } from "react";
-import Modal  from "@/components/ui/modal";
-import CarForm from "./carForm";
+import Modal from "@/components/ui/modal";
+import CarForm from "./CarForm";
 
 interface CarFormModalProps {
   isOpen: boolean;
@@ -34,9 +34,9 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
     >
       <div className="p-4">
         <CarForm 
-        //   carId={carId} 
-        //   onSuccess={handleSuccess} 
-        //   onCancel={onClose}
+          carId={carId} 
+          onSuccess={handleSuccess} 
+          onCancel={onClose}
         />
       </div>
     </Modal>

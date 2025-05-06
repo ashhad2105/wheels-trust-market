@@ -1,11 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Plus, Trash } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ServiceForm from "./ServiceForm";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import ServiceList from "./service-item/ServiceList";
 import axios from "axios";
 
 interface Service {
@@ -266,88 +266,12 @@ const ServiceManagement: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 gap-4">
-        {services.map((service) => (
-          <Card key={service._id} className={service.status === "inactive" ? "opacity-70" : ""}>
-            <CardHeader className="bg-gray-50">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>{service.name}</CardTitle>
-                  <CardDescription>{service.category.charAt(0).toUpperCase() + service.category.slice(1)}</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setEditService(service)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-destructive border-destructive">
-                        <Trash className="h-4 w-4 mr-1" /> Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete the service "{service.name}". This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => handleDeleteService(service._id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-500">Price</p>
-                  <p className="font-medium">${service.price}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Duration</p>
-                  <p className="font-medium">
-                    {service.duration < 60 
-                      ? `${service.duration} minutes` 
-                      : `${Math.floor(service.duration / 60)} hour${service.duration >= 120 ? 's' : ''} ${service.duration % 60 > 0 ? `${service.duration % 60} minutes` : ''}`
-                    }
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <div className="flex items-center">
-                    <span 
-                      className={`inline-block w-2 h-2 rounded-full mr-2 ${service.status === "active" ? "bg-green-500" : "bg-gray-400"}`}
-                    ></span>
-                    <span>{service.status === "active" ? "Active" : "Inactive"}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="ml-2 text-xs h-6"
-                      onClick={() => handleToggleStatus(service._id, service.status)}
-                    >
-                      {service.status === "active" ? "Deactivate" : "Activate"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-gray-700">{service.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <ServiceList 
+        services={services}
+        onEdit={setEditService}
+        onDelete={handleDeleteService}
+        onToggleStatus={handleToggleStatus}
+      />
     </div>
   );
 };
