@@ -45,7 +45,7 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
     <Card className="overflow-hidden hover-scale transition-all duration-300 shadow-md h-full flex flex-col">
       <div className="relative">
         <img
-          src={car.image}
+          src={car.images[0]} // Fixed: Use images[0] instead of image
           alt={title}
           className="w-full h-48 object-cover"
         />

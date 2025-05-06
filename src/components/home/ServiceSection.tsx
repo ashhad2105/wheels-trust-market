@@ -1,10 +1,18 @@
+
 import React from "react";
 import { services } from "@/lib/data";
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 
-const ServiceSection = () => {
-  const featuredServices = services.filter((service) => service.featured);
+interface ServiceSectionProps {
+  // Make it optional to allow default behavior
+  services?: any[];
+}
+
+const ServiceSection: React.FC<ServiceSectionProps> = ({ services: providedServices }) => {
+  // Use provided services or fall back to imported services
+  const servicesToUse = providedServices || services;
+  const featuredServices = servicesToUse.filter((service) => service.featured);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {

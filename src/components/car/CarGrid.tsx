@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { CarType } from "@/lib/data";
 import CarCard from "./CarCard";
-import CarFilters from "./CarFilters";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,10 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface CarGridProps {
-  // You can define props here if needed
+  cars?: CarType[]; // Make this optional so it can fetch cars internally if not provided
 }
 
-const CarGrid: React.FC<CarGridProps> = ({}) => {
+const CarGrid: React.FC<CarGridProps> = ({ cars: initialCars }) => {
   const [carData, setCarData] = useState<CarType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +40,13 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
   const carsPerPage = 6;
 
   useEffect(() => {
+    // If cars are provided as props, use those instead of fetching
+    if (initialCars) {
+      setCarData(initialCars);
+      setLoading(false);
+      return;
+    }
+
     const fetchCars = async () => {
       setLoading(true);
       try {
@@ -61,14 +68,14 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
     };
 
     fetchCars();
-  }, []);
+  }, [initialCars]);
 
-  const handleFilterChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLSelectElement>,
-    filterKey: string
-  ) => {
+  // Define the filter handler interface
+  interface FilterChangeHandler {
+    (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>, filterKey: string): void;
+  }
+
+  const handleFilterChange: FilterChangeHandler = (e, filterKey) => {
     const value = e.target.value;
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -77,12 +84,12 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
     setCurrentPage(1); // Reset to the first page when filters change
   };
 
-  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortOrder(e.target.value as "asc" | "desc");
+  const handleSortOrderChange = (value: "asc" | "desc") => {
+    setSortOrder(value);
   };
 
-  const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
+  const handleSortByChange = (value: string) => {
+    setSortBy(value);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,7 +211,52 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
     <div className="container mx-auto px-4">
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="md:w-1/4">
-          <CarFilters filters={filters} onFilterChange={handleFilterChange} />
+          {/* Create a simpler version of CarFilters integrated here */}
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-medium mb-4">Filter Cars</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="make">Make</Label>
+                <Input
+                  id="make"
+                  value={filters.make}
+                  onChange={(e) => handleFilterChange(e, "make")}
+                  placeholder="Enter make..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="model">Model</Label>
+                <Input
+                  id="model"
+                  value={filters.model}
+                  onChange={(e) => handleFilterChange(e, "model")}
+                  placeholder="Enter model..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="year">Year</Label>
+                <Input
+                  id="year"
+                  value={filters.year}
+                  onChange={(e) => handleFilterChange(e, "year")}
+                  placeholder="Enter year..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  value={filters.price}
+                  onChange={(e) => handleFilterChange(e, "price")}
+                  placeholder="Enter price..."
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="md:w-3/4">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
@@ -219,7 +271,7 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
             <div className="flex items-center space-x-2">
               <div>
                 <Label htmlFor="sortOrder">Sort Order:</Label>
-                <Select value={sortOrder} onValueChange={setSortOrder}>
+                <Select value={sortOrder} onValueChange={handleSortOrderChange}>
                   <SelectTrigger className="w-[120px]">
                     <SelectValue placeholder="Sort Order" />
                   </SelectTrigger>
@@ -231,7 +283,7 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
               </div>
               <div>
                 <Label htmlFor="sortBy">Sort By:</Label>
-                <Select value={sortBy} onValueChange={setSortBy}>
+                <Select value={sortBy} onValueChange={handleSortByChange}>
                   <SelectTrigger className="w-[120px]">
                     <SelectValue placeholder="Sort By" />
                   </SelectTrigger>
@@ -246,9 +298,15 @@ const CarGrid: React.FC<CarGridProps> = ({}) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {carsToDisplay.map((car) => (
-              <CarCard key={car.id} car={car} />
-            ))}
+            {carsToDisplay.length > 0 ? (
+              carsToDisplay.map((car) => (
+                <CarCard key={car.id} car={car} />
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-10">
+                <p className="text-gray-500">No cars found matching your criteria</p>
+              </div>
+            )}
           </div>
 
           {/* Pagination */}

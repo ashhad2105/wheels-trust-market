@@ -9,6 +9,13 @@ interface CarFormModalProps {
   carId?: string; // For edit mode
 }
 
+// Need to make sure CarForm accepts these props
+interface CarFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+  carId?: string;
+}
+
 export const CarFormModal: React.FC<CarFormModalProps> = ({
   isOpen,
   onClose,

@@ -1,24 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CarGrid from "@/components/car/CarGrid";
-import CarFilters from "@/components/car/CarFilters";
 import { cars as carData, CarType } from "@/lib/data";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 
 const CarsBuy = () => {
   const [cars, setCars] = useState<CarType[]>(carData);
-  const [filteredCars, setFilteredCars] = useState<CarType[]>(carData);
-    const { openModal: openAuthModal } = useAuthModal();
-
-  useEffect(() => {
-    setFilteredCars(cars);
-  }, [cars]);
-
-  const handleFilterChange = (filtered: CarType[]) => {
-    setFilteredCars(filtered);
-  };
+  const { openModal: openAuthModal } = useAuthModal();
 
   return (
     <>
@@ -31,8 +22,8 @@ const CarsBuy = () => {
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Find Your Dream Car
           </h1>
-          <CarFilters cars={cars} onFilterChange={handleFilterChange} />
-          <CarGrid cars={filteredCars} />
+          {/* Now CarGrid accepts cars as an optional prop */}
+          <CarGrid cars={cars} />
         </div>
       </main>
       <Footer />
