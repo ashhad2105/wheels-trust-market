@@ -17,14 +17,18 @@ const ServiceSchema = new mongoose.Schema({
     required: [true, 'Please add a price']
   },
   duration: {
-    type: Number,
+    type: String,
     required: [true, 'Please add service duration in minutes']
   },
   serviceProvider: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User',
+    ref: 'ServiceProvider',
     required: true
-  },
+  },user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
   category: {
     type: String,
     required: [true, 'Please add a category'],

@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import axios from "axios";
+import ServiceModal from "@/components/service/ServiceModal";
 import BookingStatusDropdown from "@/components/ui/bookingStatusDropDown";
-
+import BookingDetailsModal from "@/components/ui/BookingDetailsModal";
 const ServiceProviderDashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -26,6 +27,42 @@ const ServiceProviderDashboard = () => {
   const navigate = useNavigate();
   const [serviceProviderResponse, setServiceProviderResponse] = useState(null);
   type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [profileData, setProfileData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    description: "",
+    location: {
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+    },
+    specialties: [],
+    website: "",
+  });
+  const handleViewDetails = (booking: any) => {
+    setSelectedBooking(booking); // Set the selected booking
+    setIsBookingModalOpen(true); // Open the modal
+  };
+  const handleAddService = () => {
+    setSelectedService(null); // Clear selected service for adding
+    setIsModalOpen(true);
+  };
+
+  const handleEditService = (service: any) => {
+    console.log("Testing",service);
+    setSelectedService(service); // Set the selected service for editing
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    await fetchProviderData(); // Refresh the services list
+  };
 
   interface Booking {
     id: string;
@@ -66,46 +103,97 @@ const ServiceProviderDashboard = () => {
     }
      
   };
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
   
+      await axios.put(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/service-providers/${serviceProviderResponse?._id}`,
+        profileData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+        variant: "default",
+      });
+  
+      // Refresh provider data
+      fetchProviderData();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   const fetchProviderData = async () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      
-      // Fetch services offered by this provider
-      const servicesResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/services?serviceProvider=${user?.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+  
+      // Fetch service provider details
       const serviceProviderResponse = await axios.get(
         `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/service-providers/by-user/${user?.id}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // console.log(user?.id);
-      console.log(serviceProviderResponse.data);
-      setServiceProviderResponse(serviceProviderResponse.data);
-      // Fetch bookings for this provider
+  
+      const serviceProviderData = serviceProviderResponse.data;
+      setServiceProviderResponse(serviceProviderData);
+  
+      // Populate profileData state
+      setProfileData({
+        name: serviceProviderData.name || "",
+        email: serviceProviderData.email || "",
+        phone: serviceProviderData.phone || "",
+        description: serviceProviderData.description || "",
+        location: {
+          address: serviceProviderData.location?.address || "",
+          city: serviceProviderData.location?.city || "",
+          state: serviceProviderData.location?.state || "",
+          zipCode: serviceProviderData.location?.zipCode || "",
+        },
+        specialties: serviceProviderData.specialties || [],
+        website: serviceProviderData.website || "",
+      });
+  
+      // Fetch services
+      if (serviceProviderData.services && serviceProviderData.services.length > 0) {
+        const servicesResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/services`,
+          {
+            params: { ids: serviceProviderData.services },
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setServices(servicesResponse.data.data || []);
+      } else {
+        setServices([]);
+      }
+  
+      // Fetch bookings
       const bookingsResponse = await axios.get(
-        `http://localhost:5000/api/v1/bookings/provider/${serviceProviderResponse.data._id}`,
+        `http://localhost:5000/api/v1/bookings/provider/${serviceProviderData._id}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      console.log(bookingsResponse.data.data);
-
-      setServices(servicesResponse.data.data || []);
+  
       setBookings(bookingsResponse.data.data || []);
     } catch (error) {
       console.error("Error fetching provider data:", error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -267,56 +355,71 @@ const ServiceProviderDashboard = () => {
 
                 {/* Services Tab */}
                 <TabsContent value="services">
-                  <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">My Services</h1>
-                    <Button>Add New Service</Button>
-                  </div>
-                  
-                  {isLoading ? (
-                    <div className="flex justify-center p-12">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                    </div>
-                  ) : serviceProviderResponse?.services.length > 0 ? (
-                    <div className="space-y-4">
-                      {serviceProviderResponse?.services.map((service, index) => (
-                        <Card key={index}>
-                          <CardContent className="p-0">
-                            <div className="flex flex-col md:flex-row">
-                              
-                              <div className="p-6 md:w-3/4">
-                                  <h3 className="text-lg font-semibold mb-2">{service.name}</h3>
-                                <p className="text-sm text-gray-600 mb-4">{service.description}</p>
-                                <div className="flex flex-wrap gap-4 text-sm mb-4">
-                                  <div>
-                                    <span className="font-medium">Price:</span> ${service.price}
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Duration:</span> {service.duration} minutes
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Category:</span> {service.category}
-                                  </div>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  <Button variant="outline" size="sm">Edit</Button>
-                                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">Delete</Button>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                      <Settings className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No Services Listed</h3>
-                      <p className="text-gray-500 mb-6">You haven't added any services yet.</p>
-                      <Button>Add Your First Service</Button>
-                    </div>
-                  )}
-                </TabsContent>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">My Services</h1>
+          <Button onClick={handleAddService}>Add New Service</Button>
+        </div>
 
+        {isLoading ? (
+          <div className="flex justify-center p-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : services.length > 0 ? (
+          <div className="space-y-4">
+            {services.map((service, index) => (
+              <Card key={index}>
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row">
+                    <div className="p-6 md:w-3/4">
+                      <h3 className="text-lg font-semibold mb-2">{service.name}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{service.description}</p>
+                      <div className="flex flex-wrap gap-4 text-sm mb-4">
+                        <div>
+                          <span className="font-medium">Price:</span> ${service.price}
+                        </div>
+                        <div>
+                          <span className="font-medium">Duration:</span> {service.duration}
+                        </div>
+                        <div>
+                          <span className="font-medium">Category:</span> {service.category}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditService(service)}>
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <Settings className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Services Listed</h3>
+            <p className="text-gray-500 mb-6">You haven't added any services yet.</p>
+            <Button onClick={handleAddService}>Add Your First Service</Button>
+          </div>
+        )}
+      </TabsContent>
+
+      {/* Add/Edit Service Modal */}
+      <ServiceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        service={selectedService}
+        serviceProviderId={serviceProviderResponse?._id}
+      />
                 {/* Bookings Tab */}
                 <TabsContent value="bookings">
                   <h1 className="text-2xl font-bold mb-6">Manage Bookings</h1>
@@ -353,8 +456,9 @@ const ServiceProviderDashboard = () => {
                                   {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Unknown"}
                                 </div>
                                 <div className="flex gap-2 justify-end">
-                                  <Button variant="outline" size="sm">View Details</Button>
-                                  
+                                <Button variant="outline" size="sm" onClick={() => handleViewDetails(booking)}>
+                  View Details
+                </Button>
                                   <Select
   value={booking.status}
   onValueChange={(value) => handleBookingStatusChange(booking._id, value as Booking['status'])}
@@ -385,79 +489,149 @@ const ServiceProviderDashboard = () => {
                       <p className="text-gray-500">You don't have any service bookings at the moment.</p>
                     </div>
                   )}
+                  <BookingDetailsModal
+    isOpen={isBookingModalOpen}
+    onClose={() => setIsBookingModalOpen(false)}
+    booking={selectedBooking}
+    
+  />
                 </TabsContent>
 
                 {/* Profile Tab */}
-                <TabsContent value="profile">
-                  <h1 className="text-2xl font-bold mb-6">My Profile</h1>
-                  
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="space-y-6">
-                        <div className="flex flex-col lg:flex-row gap-6">
-                          <div className="lg:w-1/3 space-y-2">
-                            <label className="text-sm font-medium">Full Name</label>
-                            <Input defaultValue={serviceProviderResponse?.name || ""} />
-                          </div>
-                          <div className="lg:w-1/3 space-y-2">
-                            <label className="text-sm font-medium">Email</label>
-                            <Input defaultValue={serviceProviderResponse?.email || ""} />
-                          </div>
-                          <div className="lg:w-1/3 space-y-2">
-                            <label className="text-sm font-medium">Phone</label>
-                            <Input defaultValue={serviceProviderResponse?.phone || ""} />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Business Description</label>
-                          <Textarea 
-                            placeholder="Describe your business and services..." 
-                            className="h-32"
-                            defaultValue={serviceProviderResponse?.description || ""}
-                          />
-                        </div>
-                        
-                        <div className="flex flex-col lg:flex-row gap-6">
-                          <div className="lg:w-1/2 space-y-2">
-                            <label className="text-sm font-medium">Address</label>
-                            <Input defaultValue={serviceProviderResponse?.location.address || ""} placeholder="Street Address" />
-                          </div>
-                          <div className="lg:w-1/2 space-y-2">
-                            <label className="text-sm font-medium">City</label>
-                            <Input defaultValue={serviceProviderResponse?.location.city || ""}  placeholder="City" />
-                          </div>
-                        </div>
-                        
-                        {/* <div className="flex flex-col lg:flex-row gap-6">
-                          <div className="lg:w-1/2 space-y-2">
-                            <label className="text-sm font-medium">Specialization</label>
-                            <Select>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select specialization" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="general">General Maintenance</SelectItem>
-                                <SelectItem value="brakes">Brake Systems</SelectItem>
-                                <SelectItem value="engine">Engine Repair</SelectItem>
-                                <SelectItem value="electrical">Electrical Systems</SelectItem>
-                                <SelectItem value="body">Body Work</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="lg:w-1/2 space-y-2">
-                            <label className="text-sm font-medium">Years in Business</label>
-                            <Input type="number" placeholder="Years of experience" />
-                          </div>
-                        </div> */}
-                        
-                        <div className="pt-4">
-                          <Button>Save Changes</Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+{/* Profile Tab */}
+<TabsContent value="profile">
+  <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+
+  <Card>
+    <CardContent className="pt-6">
+      <form onSubmit={handleUpdateProfile}>
+        <div className="space-y-6">
+          {/* Profile Header */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="lg:w-1/3 space-y-2">
+              <label className="text-sm font-medium">Full Name</label>
+              <Input
+                value={profileData.name}
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+              />
+            </div>
+            <div className="lg:w-1/3 space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                value={profileData.email}
+                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              />
+            </div>
+            <div className="lg:w-1/3 space-y-2">
+              <label className="text-sm font-medium">Phone</label>
+              <Input
+                value={profileData.phone}
+                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Business Description */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Business Description</label>
+            <Textarea
+              placeholder="Describe your business and services..."
+              className="h-32"
+              value={profileData.description}
+              onChange={(e) => setProfileData({ ...profileData, description: e.target.value })}
+            />
+          </div>
+
+          {/* Address Section */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="lg:w-1/2 space-y-2">
+              <label className="text-sm font-medium">Address</label>
+              <Input
+                value={profileData.location.address}
+                onChange={(e) =>
+                  setProfileData({
+                    ...profileData,
+                    location: { ...profileData.location, address: e.target.value },
+                  })
+                }
+                placeholder="Street Address"
+              />
+            </div>
+            <div className="lg:w-1/2 space-y-2">
+              <label className="text-sm font-medium">City</label>
+              <Input
+                value={profileData.location.city}
+                onChange={(e) =>
+                  setProfileData({
+                    ...profileData,
+                    location: { ...profileData.location, city: e.target.value },
+                  })
+                }
+                placeholder="City"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="lg:w-1/2 space-y-2">
+              <label className="text-sm font-medium">State</label>
+              <Input
+                value={profileData.location.state}
+                onChange={(e) =>
+                  setProfileData({
+                    ...profileData,
+                    location: { ...profileData.location, state: e.target.value },
+                  })
+                }
+                placeholder="State"
+              />
+            </div>
+            <div className="lg:w-1/2 space-y-2">
+              <label className="text-sm font-medium">Zip Code</label>
+              <Input
+                value={profileData.location.zipCode}
+                onChange={(e) =>
+                  setProfileData({
+                    ...profileData,
+                    location: { ...profileData.location, zipCode: e.target.value },
+                  })
+                }
+                placeholder="Zip Code"
+              />
+            </div>
+          </div>
+
+          {/* Specialties Section */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Specialties</label>
+            <Textarea
+              placeholder="List your specialties (comma-separated)..."
+              className="h-20"
+              value={profileData.specialties.join(", ")}
+              onChange={(e) =>
+                setProfileData({ ...profileData, specialties: e.target.value.split(",").map((s) => s.trim()) })
+              }
+            />
+          </div>
+
+          {/* Website Section */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Website</label>
+            <Input
+              value={profileData.website}
+              onChange={(e) => setProfileData({ ...profileData, website: e.target.value })}
+              placeholder="Website URL"
+            />
+          </div>
+
+          {/* Save Changes Button */}
+          <div className="pt-4">
+            <Button type="submit">Save Changes</Button>
+          </div>
+        </div>
+      </form>
+    </CardContent>
+  </Card>
+</TabsContent>
               </Tabs>
             </main>
           </div>

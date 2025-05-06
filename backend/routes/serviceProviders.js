@@ -46,7 +46,7 @@ router.post('/', protect, authorize('user', 'admin'), upload.array('images', 5),
 // @route   PUT /api/v1/service-providers/:id
 // @desc    Update service provider
 // @access  Private
-router.put('/:id', protect, authorize('user', 'admin'), upload.array('images', 5), validateServiceProvider, handleValidationErrors, updateServiceProvider);
+router.put('/:id', protect, authorize('user','service_provider', 'admin'), upload.array('images', 5), validateServiceProvider, handleValidationErrors, updateServiceProvider);
 
 // @route   DELETE /api/v1/service-providers/:id
 // @desc    Delete service provider
