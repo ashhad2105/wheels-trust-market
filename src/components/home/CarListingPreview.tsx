@@ -35,7 +35,7 @@ const CarListingPreview: React.FC<CarListingPreviewProps> = ({ cars }) => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {previewCars.map((car) => (
-            <CarCard key={car.id} car={{...car, price: `₹${car.price.replace(/\$/g, '')}`}} />
+            <CarCard key={car.id} car={{...car, price: `₹${String(car.price).replace(/\$/g, '')}`}} />
           ))}
         </div>
       </div>
