@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CarFormModal } from "@/components/car/CarFormModal";
+import CarFormModal from "@/components/car/CarFormModal";
 import axios from "axios";
 
 interface CarImage {
