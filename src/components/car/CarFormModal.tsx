@@ -33,11 +33,14 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
       size="xl"
     >
       <div className="p-4">
-        <CarForm 
-          onSuccess={handleSuccess} 
-          onCancel={onClose}
-          carId={carId}
-        />
+        {/* Only render CarForm if open to avoid unnecessary mounting */}
+        {isOpen && (
+          <CarForm 
+            onSuccess={handleSuccess} 
+            onCancel={onClose}
+            carId={carId}
+          />
+        )}
       </div>
     </Modal>
   );
