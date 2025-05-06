@@ -81,20 +81,24 @@ const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onClose, setIsLogin }) => 
     e.preventDefault();
     setLoading(true);
 
-    if (!email || !password || (!isLogin && !name)) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
     try {
+      if (!email || !password || (!isLogin && !name)) {
+        toast({
+          title: "Missing fields",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      console.log("Attempting auth:", isLogin ? "login" : "signup");
+      
       if (isLogin) {
         // Login logic
         const success = await login(email, password);
+        console.log("Login result:", success);
+        
         if (success) {
           toast({
             title: "Login successful",
@@ -112,6 +116,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onClose, setIsLogin }) => 
       } else {
         // Signup logic
         const success = await signup(email, password, name);
+        console.log("Signup result:", success);
+        
         if (success) {
           toast({
             title: "Signup successful",

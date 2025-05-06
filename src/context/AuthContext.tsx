@@ -81,10 +81,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log('Login function called with:', { email });
+      
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`,
         { email, password }
       );
+      
+      console.log('Login response:', response.data);
       
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
@@ -106,10 +110,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     try {
+      console.log('Signup function called with:', { email, name });
+      
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`,
         { email, password, name }
       );
+      
+      console.log('Signup response:', response.data);
       
       if (response.data.success) {
         // After successful signup, perform automatic login
