@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
+import React, { useState } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CarGrid from "@/components/car/CarGrid";
@@ -13,21 +13,19 @@ const CarsBuy = () => {
 
   return (
     <>
-      <Helmet>
+      <HelmetProvider>
         <title>Buy Cars | WheelsTrust</title>
-      </Helmet>
+      </HelmetProvider>
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Find Your Dream Car
           </h1>
-          {/* Now CarGrid accepts cars as an optional prop */}
           <CarGrid cars={cars} />
         </div>
       </main>
       <Footer />
-      {/* AuthModal is now provided through AuthModalProvider */}
     </>
   );
 };

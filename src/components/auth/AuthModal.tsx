@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-// Remove FaGithub, FaGoogle, FaFacebook imports
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -116,9 +115,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onClose, setIsLogin }) => 
         if (success) {
           toast({
             title: "Signup successful",
-            description: "Your account has been created.",
+            description: "Your account has been created and you are now logged in.",
           });
-          setIsLogin(true); // Switch to login after successful signup
+          onClose();
+          navigate("/dashboard");
         } else {
           toast({
             title: "Signup failed",

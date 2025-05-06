@@ -88,13 +88,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
         
         // Ensure user has both _id and id properties
-        const userData = response.data.user;
+        const userData = response.data.data || response.data.user;
         userData.id = userData._id;
         
         setUser(userData);
+        localStorage.setItem('currentUser', JSON.stringify(userData));
         return true;
       }
       return false;
@@ -107,12 +107,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/signup`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`,
         { email, password, name }
       );
       
       if (response.data.success) {
-        return true;
+        // After successful signup, perform automatic login
+        const loginSuccess = await login(email, password);
+        return loginSuccess;
       }
       return false;
     } catch (error) {
@@ -133,8 +135,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (!token) return false;
       
-      const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/profile`,
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/updatedetails`,
         userData,
         {
           headers: {
