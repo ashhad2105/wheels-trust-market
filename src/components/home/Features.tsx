@@ -1,6 +1,8 @@
 import React from "react";
 import { Search, Info, Settings, LayoutDashboard } from "lucide-react";
 import { features } from "@/lib/data";
+import { Link } from "react-router-dom";
+import { Button } from "../ui/button";
 
 const featureIcons = {
   search: <Search className="h-6 w-6" />,
@@ -38,26 +40,25 @@ const Features = () => {
           ))}
         </div>
 
-        <div className="mt-16 bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-8 md:p-12 text-white">
-          <div className="grid md:grid-cols-3 gap-8 items-center">
-            <div className="md:col-span-2">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                Join the WheelsTrust community today
-              </h3>
-              <p className="text-blue-100 mb-6 md:mb-0">
-                Experience a new standard in automotive transactions and services.
-                Whether you're buying, selling, or maintaining your vehicle, we're
-                here to help every step of the way.
-              </p>
+        
+        <div className="mt-12">
+            <h3 className="text-2xl font-bold mb-4">Are you a service provider?</h3>
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <p className="text-gray-600 mb-6">
+                        Join our network of trusted automotive professionals. Increase your visibility,
+                        connect with customers, and grow your business with transparent pricing.
+                    </p>
+                
+                    <Link to="/services">
+                        <Button className="button-gradient text-white">
+                            Partner With Us
+                        </Button>
+                    </Link>
+                </div>
             </div>
-            <div className="flex justify-center md:justify-end">
-              <button className="bg-white text-primary font-medium px-6 py-3 rounded-lg hover:shadow-lg transition duration-300">
-                Get Started
-              </button>
-            </div>
-          </div>
         </div>
-      </div>
+    </div>
     </section>
   );
 };

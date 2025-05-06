@@ -375,14 +375,11 @@ exports.updateBookingStatus = async (req, res, next) => {
 exports.getProviderBookings = async (req, res, next) => {
   try {
     // Get bookings where the service provider is the current user
-    const bookings = await Booking.find({ serviceProvider: req.user.id })
+    console.log(req.params.id);
+    const bookings = await Booking.find({ serviceProvider: req.params.id })
       .populate({
         path: 'user',
         select: 'name email phone'
-      })
-      .populate({
-        path: 'service',
-        select: 'name price duration'
       })
       .sort('-createdAt');
 
@@ -435,3 +432,20 @@ exports.checkAvailability = async (req, res, next) => {
     next(err);
   }
 }; 
+//change booking status
+exports.changeBookingStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const booking = await Booking.findByIdAndUpdate(id, { status }, { new: true });
+
+    res.status(200).json({
+      success: true,
+      message: 'Booking status updated successfully',
+      data: booking
+    });
+  } catch (err) {
+    next(err);
+  }
+};

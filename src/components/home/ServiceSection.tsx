@@ -47,18 +47,7 @@ const ServiceSection: React.FC<ServiceSectionProps> = ({ services }) => {
               className="rounded-lg shadow-lg"
             />
           </div>
-          <div>
-            <h3 className="text-2xl font-bold mb-4">Are you a service provider?</h3>
-            <p className="text-gray-600 mb-6">
-              Join our network of trusted automotive professionals. Increase your visibility,
-              connect with customers, and grow your business with transparent pricing.
-            </p>
-            <Link to="/services">
-              <Button className="button-gradient text-white">
-                Partner With Us
-              </Button>
-            </Link>
-          </div>
+          
         </div>
       </div>
     </section>
