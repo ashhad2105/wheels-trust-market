@@ -93,6 +93,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onClose, setIsLogin }) => 
       }
 
       console.log("Attempting auth:", isLogin ? "login" : "signup");
+      console.log("Form data:", { email, password, name: !isLogin ? name : "N/A" });
       
       if (isLogin) {
         // Login logic

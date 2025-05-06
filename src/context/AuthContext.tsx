@@ -83,8 +83,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Login function called with:', { email });
       
+      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`;
+      console.log('Attempting to login at URL:', apiUrl);
+      
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`,
+        apiUrl,
         { email, password }
       );
       
@@ -95,15 +98,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Ensure user has both _id and id properties
         const userData = response.data.data || response.data.user;
+        console.log('User data received:', userData);
+        
+        if (!userData) {
+          console.error('No user data received in successful response');
+          return false;
+        }
+        
         userData.id = userData._id;
         
         setUser(userData);
         localStorage.setItem('currentUser', JSON.stringify(userData));
         return true;
       }
+      
+      console.error('Login unsuccessful:', response.data);
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Request config:', error.config);
       return false;
     }
   };
