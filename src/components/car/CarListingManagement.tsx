@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CarFormModal from "./CarFormModal";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios"; // Added the missing axios import
 
 interface JwtPayload {
   id: string;
