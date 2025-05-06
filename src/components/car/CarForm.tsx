@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
@@ -778,7 +777,7 @@ console.log("Car Data "+carData);
                   </div>
           </div>
       </main>
-      <AuthModal />
+      <AuthModal isOpen={false} onClose={() => {}} />
       <Footer />
     </>
   );

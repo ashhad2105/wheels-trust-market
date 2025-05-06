@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
@@ -489,8 +488,8 @@ console.log("Car Data "+carData);
           );
         })}
         
-        <label className="flex flex-col items-center justify-center aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 cursor-pointer">
-          <Upload className="h-8 w-8 text-gray-400 mb-1" />
+        <label className="flex flex-col items-center justify-center aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-gray-400 cursor-pointer">
+          <Upload className="h-6 w-6 text-gray-400 mb-1" />
           <span className="text-sm text-gray-500">Add Photo</span>
           <input
             type="file"
@@ -895,7 +894,6 @@ console.log("Car Data "+carData);
           </div>
         </div>
       </main>
-      <AuthModal />
       <Footer />
     </>
   );

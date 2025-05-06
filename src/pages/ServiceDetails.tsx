@@ -7,7 +7,7 @@ import { Calendar, Clock, MapPin, Star, MessageSquare, Calendar as CalendarIcon,
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
-import AuthModal from "@/components/auth/AuthModal";
+import { AuthModalProvider } from "@/components/auth/AuthModalProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Dialog,
@@ -600,7 +600,6 @@ const ServiceDetails = () => {
           </div>
         </div>
       </main>
-      <AuthModal />
       <Footer />
       
       {/* Booking Modal */}

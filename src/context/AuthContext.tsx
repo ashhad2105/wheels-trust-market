@@ -1,35 +1,17 @@
 
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  ReactNode,
-} from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  createdAt: string;
-  avatar?: string;
-  avatarPublicId?: string;
-  address?: string;
-  emailVerified?: boolean;
-  phone?: string;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
+import { User } from '@/types/user';
+import { useAuthModal } from '@/components/auth/AuthModalProvider';
 
 interface AuthContextProps {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
+  logout: () => void;
+  updateUser: (userData: Partial<User>) => Promise<boolean>;
   openAuthModal: () => void;
 }
 
@@ -38,24 +20,63 @@ const AuthContext = createContext<AuthContextProps>({
   isAuthenticated: false,
   isLoading: true,
   login: async () => false,
-  logout: () => {},
   signup: async () => false,
+  logout: () => {},
+  updateUser: async () => false,
   openAuthModal: () => {},
 });
+
+export const useAuth = () => useContext(AuthContext);
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const navigate = useNavigate();
+  const { openModal } = useAuthModal();
+
+  const checkAuthentication = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+      
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // Ensure user has both _id and id properties
+        const userData = response.data.data;
+        userData.id = userData._id;
+        setUser(userData);
+      } else {
+        setUser(null);
+        localStorage.removeItem('token');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      setUser(null);
+      localStorage.removeItem('token');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    checkToken();
+    checkAuthentication();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -64,17 +85,21 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/login`,
         { email, password }
       );
-
+      
       if (response.data.success) {
-        const { token, user } = response.data;
-        localStorage.setItem("token", token);
-        setUser(user);
-        setIsAuthenticated(true);
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+        
+        // Ensure user has both _id and id properties
+        const userData = response.data.user;
+        userData.id = userData._id;
+        
+        setUser(userData);
         return true;
-      } 
+      }
       return false;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       return false;
     }
   };
@@ -82,88 +107,70 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/register`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/signup`,
         { email, password, name }
       );
-
+      
       if (response.data.success) {
-        const { token, user } = response.data;
-        localStorage.setItem("token", token);
-        setUser(user);
-        setIsAuthenticated(true);
         return true;
       }
       return false;
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error('Signup error:', error);
       return false;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
     setUser(null);
-    setIsAuthenticated(false);
-    navigate("/");
   };
 
-  const openAuthModal = () => {
-    setIsAuthModalOpen(true);
-  };
-
-  const checkToken = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setIsAuthenticated(false);
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
+  const updateUser = async (userData: Partial<User>): Promise<boolean> => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/auth/me`,
+      const token = localStorage.getItem('token');
+      
+      if (!token) return false;
+      
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/users/profile`,
+        userData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         }
       );
-
+      
       if (response.data.success) {
-        console.log("Fetched user data:", response.data.data);
-        setUser(response.data.data);
-        setIsAuthenticated(true);
-      } else {
-        localStorage.removeItem("token");
-        setIsAuthenticated(false);
-        setUser(null);
+        // Ensure updated user has both _id and id
+        const updatedUser = response.data.data;
+        updatedUser.id = updatedUser._id;
+        
+        setUser(updatedUser);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        return true;
       }
+      return false;
     } catch (error) {
-      console.error("Error verifying token:", error);
-      setIsAuthenticated(false);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      console.error('Update user error:', error);
+      return false;
     }
   };
 
-  const value = {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-    signup,
-    openAuthModal,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated: !!user, 
+      isLoading, 
+      login, 
+      signup, 
+      logout, 
+      updateUser,
+      openAuthModal: openModal
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-
-const useAuth = () => {
-  return useContext(AuthContext);
-};
-
-export { AuthProvider, useAuth };

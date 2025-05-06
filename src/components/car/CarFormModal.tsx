@@ -34,9 +34,9 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
     >
       <div className="p-4">
         <CarForm 
-          carId={carId} 
           onSuccess={handleSuccess} 
           onCancel={onClose}
+          carId={carId}
         />
       </div>
     </Modal>

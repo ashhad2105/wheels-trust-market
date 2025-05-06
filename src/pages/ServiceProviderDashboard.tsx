@@ -140,7 +140,7 @@ const ServiceProviderDashboard = () => {
   
       // Fetch service provider details
       const serviceProviderResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/service-providers/by-user/${user?.id}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/v1/service-providers/by-user/${user?._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -498,8 +498,7 @@ const ServiceProviderDashboard = () => {
                 </TabsContent>
 
                 {/* Profile Tab */}
-{/* Profile Tab */}
-<TabsContent value="profile">
+                <TabsContent value="profile">
   <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
   <Card>

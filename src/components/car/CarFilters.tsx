@@ -34,8 +34,10 @@ const CarFilters: React.FC<CarFiltersProps> = ({ cars, onFilterChange }) => {
         car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
         car.title?.toLowerCase().includes(searchQuery.toLowerCase());
 
+      // Convert price to number for comparison if it's a string
+      const carPrice = typeof car.price === 'string' ? parseFloat(car.price) : car.price;
       const matchesPrice = 
-        car.price >= priceRange[0] && car.price <= priceRange[1];
+        !isNaN(carPrice) && carPrice >= priceRange[0] && carPrice <= priceRange[1];
 
       const matchesYear = 
         car.year >= yearRange[0] && car.year <= yearRange[1];
@@ -201,4 +203,4 @@ const CarFilters: React.FC<CarFiltersProps> = ({ cars, onFilterChange }) => {
   );
 };
 
-export default CarFilters; 
+export default CarFilters;

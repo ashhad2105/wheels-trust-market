@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ServiceType, ServiceProviderType } from "@/lib/data";
+import { ServiceType } from "@/lib/data";
 
 interface ServiceCardProps {
   service: ServiceType;
@@ -83,7 +83,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         )}
         
         <div className="flex justify-between items-center mt-4">
-          <p className="font-bold text-xl">{service.price}</p>
+          <p className="font-bold text-xl">₹{service.price}</p>
           <Button asChild>
             <Link to={`/services/${service.id}`}>View Details</Link>
           </Button>

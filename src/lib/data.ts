@@ -36,6 +36,7 @@ export interface ServiceType {
     id: string;
     name: string;
     rating: number;
+    reviewCount: number;
     image?: string;
     verified?: boolean;
     location?: string;
@@ -273,7 +274,7 @@ export const services: ServiceType[] = [
     id: "1",
     name: "Vehicle Inspection",
     description: "Comprehensive pre-purchase inspection with detailed report",
-    price: "$149",
+    price: "₹149",
     rating: 4.9,
     reviewCount: 105,
     image: "/placeholder.svg",
@@ -293,7 +294,7 @@ export const services: ServiceType[] = [
     id: "2",
     name: "Regular Maintenance",
     description: "Oil change, filter replacement, and safety check",
-    price: "$89",
+    price: "₹89",
     rating: 4.8,
     reviewCount: 120,
     image: "/placeholder.svg",
@@ -313,7 +314,7 @@ export const services: ServiceType[] = [
     id: "3",
     name: "Performance Tuning",
     description: "Engine tuning and performance optimization",
-    price: "$299",
+    price: "₹299",
     rating: 4.7,
     reviewCount: 95,
     image: "/placeholder.svg",
@@ -333,7 +334,7 @@ export const services: ServiceType[] = [
     id: "4",
     name: "Brake System Service",
     description: "Complete brake inspection and pad replacement",
-    price: "$189",
+    price: "₹189",
     rating: 4.8,
     reviewCount: 88,
     image: "/placeholder.svg",

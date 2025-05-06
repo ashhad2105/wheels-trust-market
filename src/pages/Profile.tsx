@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -50,8 +49,8 @@ interface UserProfile {
 
 const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-const [previewImage, setPreviewImage] = useState<string | null>(null);
-const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -66,7 +65,6 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
   });
   // Mock user activity
 
-
   // User settings state
   
   useEffect(() => {
@@ -75,7 +73,7 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
         setProfileLoading(true);
         // Replace with your actual API endpoint
         // console.log(localStorage.getItem('token'));
-        const response = await axios.get('http://localhost:5000/api/v1/users/' + user.id, {
+        const response = await axios.get('http://localhost:5000/api/v1/users/' + user._id, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -115,7 +113,7 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     try {
       // Replace with your actual API endpoint
-      const response = await axios.put('http://localhost:5000/api/v1/users/' + user.id, userProfile, {
+      const response = await axios.put('http://localhost:5000/api/v1/users/' + user._id, userProfile, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
@@ -245,50 +243,50 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
     }
   };
   
-const handleUploadClick = async () => {
-  if (!selectedFile) return;
+  const handleUploadClick = async () => {
+    if (!selectedFile) return;
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // 1. Upload to Cloudinary
-    const { url, publicId } = await uploadToCloudinary(selectedFile);
+      // 1. Upload to Cloudinary
+      const { url, publicId } = await uploadToCloudinary(selectedFile);
 
-    // 2. Update your backend with avatar + publicId
-    const response = await axios.put(`http://localhost:5000/api/v1/users/${user.id}`, {
-      avatar: url,
-      avatarPublicId: publicId,
-    }, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+      // 2. Update your backend with avatar + publicId
+      const response = await axios.put(`http://localhost:5000/api/v1/users/${user._id}`, {
+        avatar: url,
+        avatarPublicId: publicId,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    // 3. Update state
-    setUserProfile(prev => ({
-      ...prev,
-      avatar: response.data.data.avatar,
-    }));
+      // 3. Update state
+      setUserProfile(prev => ({
+        ...prev,
+        avatar: response.data.data.avatar,
+      }));
 
-    toast({
-      title: "Profile image updated",
-      description: "Your profile image has been successfully updated.",
-    });
+      toast({
+        title: "Profile image updated",
+        description: "Your profile image has been successfully updated.",
+      });
 
-    // Optional: reset
-    setPreviewImage(null);
-    setSelectedFile(null);
+      // Optional: reset
+      setPreviewImage(null);
+      setSelectedFile(null);
 
-  } catch (error: any) {
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: error?.message || "Failed to upload image.",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.message || "Failed to upload image.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -574,4 +572,3 @@ const handleUploadClick = async () => {
 };
 
 export default Profile;
-
