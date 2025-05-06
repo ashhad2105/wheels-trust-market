@@ -1,56 +1,58 @@
-
 import React from "react";
+import { services } from "@/lib/data";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { ServiceType } from "@/lib/data";
-import ServiceCard from "@/components/service/ServiceCard";
+import { Button } from "../ui/button";
 
-interface ServiceSectionProps {
-  services: ServiceType[];
-}
+const ServiceSection = () => {
+  const featuredServices = services.filter((service) => service.featured);
 
-const ServiceSection: React.FC<ServiceSectionProps> = ({ services }) => {
-  // Only show the first 3 services in the preview
-  const previewServices = services.slice(0, 3).map(service => ({
-    ...service,
-    price: `₹${service.price.toString().replace(/\$/g, '')}`
-  }));
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
 
   return (
-    <section className="section-padding bg-blue-50">
+    <section className="section-padding">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Vehicle Services</h2>
-            <p className="text-gray-600 max-w-2xl">
-              Connect with trusted service providers for routine maintenance, repairs, and
-              inspections with transparent pricing and verified reviews.
-            </p>
-          </div>
-          <Link to="/services">
-            <Button variant="outline" className="mt-4 md:mt-0">
-              Browse All Services
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Explore Our <span className="text-gradient">Services</span>
+          </h2>
+          <p className="text-gray-600">
+            We offer a wide range of automotive services to keep your vehicle
+            running smoothly.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {previewServices.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+          {featuredServices.map((service) => (
+            <div
+              key={service.id}
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover-scale"
+            >
+              <img
+                src={service.image}
+                alt={service.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-6">
+                <h3 className="text-xl font-semibold mb-2">{service.name}</h3>
+                <p className="text-gray-600 mb-4">{service.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-primary font-bold">
+                    {formatPrice(service.price)}
+                  </span>
+                  <Link to={`/services/${service.id}`}>
+                    <Button variant="secondary">Learn More</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           ))}
-        </div>
-
-        <div className="mt-12 bg-white rounded-xl p-8 grid md:grid-cols-2 gap-8 items-center">
-          <div className="order-first">
-            <img
-              src="https://images.unsplash.com/photo-1599256621730-535171e28b8e?q=80&w=1932&auto=format&fit=crop"
-              alt="Service provider"
-              className="rounded-lg shadow-lg"
-            />
-          </div>
-          
         </div>
       </div>
     </section>

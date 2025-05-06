@@ -18,6 +18,10 @@ export interface CarType {
   features: string[];
   isFeatured: boolean;
   isAvailable: boolean;
+  title?: string;
+  condition?: string;
+  sellerType?: string;
+  status?: string;
   owner?: {
     name: string;
     location: string;
@@ -32,7 +36,7 @@ export interface ServiceType {
   id: string;
   name: string;
   description: string;
-  price: number; // Changed from string to number
+  price: number;
   image?: string;
   rating: number;
   featured?: boolean;
@@ -71,6 +75,7 @@ export interface TestimonialType {
   title: string;
   image: string;
   quote: string;
+  rating?: number;
 }
 
 export interface TeamMemberType {
@@ -85,6 +90,30 @@ export interface TeamMemberType {
     linkedin: string;
   };
 }
+
+// Define features array that's being imported in Features.tsx
+export const features = [
+  {
+    title: "Verified Listings",
+    description: "Every vehicle on our platform undergoes a thorough verification process for your peace of mind.",
+    icon: "search"
+  },
+  {
+    title: "Transparent History",
+    description: "Access complete vehicle history reports with maintenance records and past ownership details.",
+    icon: "info"
+  },
+  {
+    title: "Quality Service",
+    description: "Connect with trusted service providers offering transparent pricing and verified reviews.",
+    icon: "settings"
+  },
+  {
+    title: "Smart Dashboard",
+    description: "Track your vehicles, services, and transactions in one convenient location.",
+    icon: "dashboard"
+  }
+];
 
 export const cars: CarType[] = [
   {
@@ -249,7 +278,7 @@ export const services: ServiceType[] = [
     id: '1',
     name: 'Basic Car Service',
     description: 'Complete checkup with oil change and filter replacement',
-    price: 2999, // Changed from string to number
+    price: 2999,
     image: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=300&h=200',
     rating: 4.5,
     featured: true,
@@ -270,7 +299,7 @@ export const services: ServiceType[] = [
     id: '2',
     name: 'Premium Car Wash',
     description: 'Exterior wash, interior vacuum, and polish treatment',
-    price: 1499, // Changed from string to number
+    price: 1499,
     image: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=300&h=200',
     rating: 4.2,
     featured: false,
@@ -291,7 +320,7 @@ export const services: ServiceType[] = [
     id: '3',
     name: 'Engine Diagnostics',
     description: 'Computer diagnostics to identify engine issues',
-    price: 3999, // Changed from string to number
+    price: 3999,
     image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=300&h=200',
     rating: 4.7,
     featured: true,
@@ -312,7 +341,7 @@ export const services: ServiceType[] = [
     id: '4',
     name: 'Tire Replacement',
     description: 'Replacement of all four tires with alignment',
-    price: 8999, // Changed from string to number
+    price: 8999,
     image: 'https://images.unsplash.com/photo-1550855297-c0b50ea42690?auto=format&fit=crop&w=300&h=200',
     rating: 4.4,
     featured: false,

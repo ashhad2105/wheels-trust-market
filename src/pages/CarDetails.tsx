@@ -131,7 +131,10 @@ const CarDetails = () => {
             <Button>Browse All Cars</Button>
           </Link>
         </div>
-        <AuthModal />
+        <AuthModal 
+          isOpen={false}
+          onClose={() => {}}
+        />
         <Footer />
       </>
     );
